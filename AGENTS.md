@@ -80,10 +80,64 @@ The color scheme is based on a Slate gray foundation with an Indigo accent for i
 - **Alignment**: `align-items: baseline` is not supported; use `flex-end` or `center`.
 - **Spacing**: The `gap` property is not supported; use `margin` on individual elements.
 
-## 5. Deployment & Debugging
-- **Logcat**: Use `npm run logcat:app-android` to view compilation errors and runtime logs.
-- **Standard Base Limitation**: Standard HBuilderX runtimes will fail to load the native modules. Always use a Custom Base.
+## 5. Development Workflow
 
-## 6. 流程
+### 5.1 Standard Modification Workflow
+After modifying any `.uts` or `.uvue` files, **always** follow this verification cycle:
+1. **Fetch build logs** to check for compilation errors
+2. **Analyze errors** against the constraints in Section 3
+3. **Fix issues** and wait for recompilation
+4. **Repeat** until compilation succeeds
 
-- 所有的uts文件、uvue文件修改后，都需要获取项目编译日志，如果存在错误，则进行修复，直到编译成功。
+### 5.2 Build Verification Commands
+```bash
+# Android platform
+npm run logcat:app-android
+
+# iOS platform
+npm run logcat:app-ios
+
+# If no logs appear, fetch the last build output
+npm run logcat:app-android -- --mode lastBuild
+npm run logcat:app-ios -- --mode lastBuild
+```
+
+## 6. AI Agent Commands & Workflows
+
+### 6.1 Fix Compilation Errors
+
+**Objective**: Resolve all build errors until the project compiles successfully.
+
+**Workflow**:
+1. **Fetch logs** using the appropriate command:
+   - Android: `npm run logcat:app-android`
+   - iOS: `npm run logcat:app-ios`
+2. **Analyze errors** by cross-referencing with Section 3 (Solved Pitfalls & Coding Standards)
+3. **Apply fixes** to the relevant `.uts` or `.uvue` files
+4. **Wait** for HBuilderX to recompile (automatic on file save)
+5. **Re-fetch logs** and repeat until no errors remain
+
+**Fallback**: If logs are empty or stale, append `-- --mode lastBuild` to the command to retrieve the most recent build output.
+
+**Common Error Patterns**:
+- **Lambda syntax errors**: Check for anonymous inner classes (Section 3.1)
+- **Type mismatches**: Verify `MutableList<T>` usage and explicit casting (Section 3.1)
+- **Property access errors**: Ensure Java getters are accessed as properties (Section 3.1)
+- **ClassCastException**: Verify `ContextCompat.getMainExecutor()` usage (Section 3.2)
+
+### 6.2 Add New Features
+
+**Workflow**:
+1. **Review constraints** in Section 3 before writing code
+2. **Follow UI specifications** in Section 4 for any UI changes
+3. **Implement** the feature in the appropriate `.uts` or `.uvue` file
+4. **Verify** using the workflow in Section 6.1
+5. **Test** on a custom debugger base if using native APIs (CameraX, MLKit)
+
+### 6.3 Debug Runtime Issues
+
+**Workflow**:
+1. **Check permissions**: Ensure runtime permissions are requested (Section 3.2)
+2. **Review logs**: Use `npm run logcat:app-android` for runtime errors
+3. **Verify threading**: Confirm UI operations run on the main thread (Section 3.2)
+4. **Check lifecycle**: Ensure proper use of page lifecycle hooks (Section 3.1)
