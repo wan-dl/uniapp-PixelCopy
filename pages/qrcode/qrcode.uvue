@@ -128,26 +128,6 @@
         flex-direction: column;
     }
 
-    .nav-bar {
-        height: 44px;
-        display: flex;
-        flex-direction: row;
-        align-items: center;
-        justify-content: center;
-        background-color: #ffffff;
-        border-bottom-width: 1px;
-        border-bottom-color: #e2e8f0;
-        padding-top: 20px;
-        /* Status bar spacing simulation if needed, though usually handled by system */
-        padding-bottom: 10px;
-    }
-
-    .nav-title {
-        font-size: 18px;
-        font-weight: 600;
-        color: #0f172a;
-    }
-
     .content-area {
         flex: 1;
         padding: 24px;
@@ -207,8 +187,6 @@
         margin-bottom: 20px;
         border-width: 1px;
         border-color: #e2e8f0;
-        /* Shadow simulation via border/color since pure shadow might vary */
-        /* box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); In UVUE check support, often limited */
     }
 
     .card-header {
@@ -225,7 +203,6 @@
         font-size: 16px;
         font-weight: 600;
         color: #10b981;
-        /* Success Green */
     }
 
     .error-title {
@@ -282,7 +259,6 @@
         border-top-width: 1px;
         border-top-color: #e2e8f0;
         padding-bottom: 40px;
-        /* Bottom safe area */
     }
 
     .btn {
@@ -293,12 +269,10 @@
 
     .btn-primary {
         background-color: #6366f1;
-        /* Indigo 500 */
     }
 
     .btn-hover {
         background-color: #4f46e5;
-        /* Indigo 600 */
     }
 
     .btn-secondary {
@@ -317,7 +291,4 @@
         opacity: 0.6;
     }
 
-    /* Button text color styling needs to be implicit or explicit based on parent */
-    /* In UVUE/Native, text inside button is often auto-styled or needs explicit text style */
-    /* Standard <button> in uni-app usually handles color, but let's be safe */
 </style>

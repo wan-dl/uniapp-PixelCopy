@@ -231,25 +231,6 @@
         flex-direction: column;
     }
 
-    .nav-bar {
-        height: 44px;
-        display: flex;
-        flex-direction: row;
-        align-items: center;
-        justify-content: center;
-        background-color: #ffffff;
-        border-bottom-width: 1px;
-        border-bottom-color: #e2e8f0;
-        padding-top: 20px;
-        padding-bottom: 10px;
-    }
-
-    .nav-title {
-        font-size: 18px;
-        font-weight: 600;
-        color: #0f172a;
-    }
-
     .content-area {
         flex: 1;
         padding: 24px;
@@ -416,7 +397,6 @@
         color: #4f46e5;
         line-height: 1;
         font-family: 'Courier New', Courier, monospace;
-        /* Monospaced for numbers if possible */
     }
 
     .metric-unit {

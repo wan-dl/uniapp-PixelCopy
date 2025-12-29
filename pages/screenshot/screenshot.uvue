@@ -1,235 +1,211 @@
 <template>
-  <view class="page-container">
+    <view class="page-container">
 
-    <view class="content-area">
-      <!-- Placeholder State -->
-      <view class="placeholder-section" v-if="screenshotPath == ''">
-        <view class="icon-wrapper">
-          <view class="icon-camera">
-            <view class="icon-camera-lens"></view>
-          </view>
-        </view>
-        <text class="placeholder-text">点击下方按钮截取当前屏幕</text>
-      </view>
+        <view class="content-area">
+            <!-- Placeholder State -->
+            <view class="placeholder-section" v-if="screenshotPath == ''">
+                <view class="icon-wrapper">
+                    <view class="icon-camera">
+                        <view class="icon-camera-lens"></view>
+                    </view>
+                </view>
+                <text class="placeholder-text">点击下方按钮截取当前屏幕</text>
+            </view>
 
-      <!-- Result Card -->
-      <view class="card result-card" v-if="screenshotPath != ''">
-        <view class="card-header">
-          <text class="card-title">截图预览</text>
-          <text class="card-time">刚刚</text>
+            <!-- Result Card -->
+            <view class="card result-card" v-if="screenshotPath != ''">
+                <view class="card-header">
+                    <text class="card-title">截图预览</text>
+                    <text class="card-time">刚刚</text>
+                </view>
+                <view class="card-content">
+                    <image :src="'file://' + screenshotPath" mode="widthFix" class="preview-image" />
+                    <view class="path-container">
+                        <text class="path-label">保存路径：</text>
+                        <text class="path-value">{{ screenshotPath }}</text>
+                    </view>
+                </view>
+            </view>
         </view>
-        <view class="card-content">
-          <image
-            :src="'file://' + screenshotPath"
-            mode="widthFix"
-            class="preview-image"
-          />
-          <view class="path-container">
-            <text class="path-label">保存路径：</text>
-            <text class="path-value">{{ screenshotPath }}</text>
-          </view>
+
+        <!-- Bottom Action -->
+        <view class="action-bar">
+            <button class="btn btn-primary" hover-class="btn-hover" @click="captureScreenshot">
+                立即截图
+            </button>
         </view>
-      </view>
     </view>
-
-    <!-- Bottom Action -->
-    <view class="action-bar">
-      <button class="btn btn-primary" hover-class="btn-hover" @click="captureScreenshot">
-        立即截图
-      </button>
-    </view>
-  </view>
 </template>
 
 <script setup lang="uts">
-  import { ref } from 'vue';
-  import { captureScreen } from '@/uni_modules/android-PixedCopy';
+    import { ref } from 'vue';
+    import { captureScreen } from '@/uni_modules/android-PixedCopy';
 
-  let screenshotPath = ref<string>('');
+    let screenshotPath = ref<string>('');
 
-  function captureScreenshot() {
-    captureScreen({
-      success: (res) => {
-        console.log('截图成功:', res.filePath);
-        screenshotPath.value = res.filePath;
-        uni.showToast({
-          title: '截图成功',
-          icon: 'success'
+    function captureScreenshot() {
+        captureScreen({
+            success: (res) => {
+                console.log('截图成功:', res.filePath);
+                screenshotPath.value = res.filePath;
+                uni.showToast({
+                    title: '截图成功',
+                    icon: 'success'
+                });
+            },
+            fail: (err) => {
+                console.log('截图失败:', err.errMsg);
+                uni.showToast({
+                    title: '截图失败: ' + err.errMsg,
+                    icon: 'error'
+                });
+            }
         });
-      },
-      fail: (err) => {
-        console.log('截图失败:', err.errMsg);
-        uni.showToast({
-          title: '截图失败: ' + err.errMsg,
-          icon: 'error'
-        });
-      }
-    });
-  };
+    };
 </script>
 
 <style>
-  .page-container {
-    flex: 1;
-    background-color: #f8fafc;
-    display: flex;
-    flex-direction: column;
-  }
+    .page-container {
+        flex: 1;
+        background-color: #f8fafc;
+        display: flex;
+        flex-direction: column;
+    }
 
-  .nav-bar {
-    height: 44px;
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: center;
-    background-color: #ffffff;
-    border-bottom-width: 1px;
-    border-bottom-color: #e2e8f0;
-    padding-top: 20px;
-    padding-bottom: 10px;
-  }
+    .content-area {
+        flex: 1;
+        padding: 24px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
 
-  .nav-title {
-    font-size: 18px;
-    font-weight: 600;
-    color: #0f172a;
-  }
+    .placeholder-section {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 40px;
+    }
 
-  .content-area {
-    flex: 1;
-    padding: 24px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    /* justify-content: center; Remove to allow top alignment for long images */
-  }
+    .icon-wrapper {
+        width: 100px;
+        height: 100px;
+        background-color: #e0e7ff;
+        border-radius: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 24px;
+    }
 
-  .placeholder-section {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 40px;
-  }
+    .icon-camera {
+        width: 48px;
+        height: 36px;
+        border-width: 4px;
+        border-color: #6366f1;
+        border-radius: 6px;
+        position: relative;
+    }
 
-  .icon-wrapper {
-    width: 100px;
-    height: 100px;
-    background-color: #e0e7ff;
-    border-radius: 20px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 24px;
-  }
+    .icon-camera-lens {
+        position: absolute;
+        width: 16px;
+        height: 6px;
+        background-color: #6366f1;
+        top: -8px;
+        left: 12px;
+        border-top-left-radius: 4px;
+        border-top-right-radius: 4px;
+    }
 
-  .icon-camera {
-    width: 48px;
-    height: 36px;
-    border-width: 4px;
-    border-color: #6366f1;
-    border-radius: 6px;
-    position: relative;
-  }
+    .placeholder-text {
+        font-size: 16px;
+        color: #64748b;
+    }
 
-  .icon-camera-lens {
-    position: absolute;
-    width: 16px;
-    height: 6px;
-    background-color: #6366f1;
-    top: -8px;
-    left: 12px;
-    border-top-left-radius: 4px;
-    border-top-right-radius: 4px;
-  }
+    .card {
+        width: 100%;
+        background-color: #ffffff;
+        border-radius: 16px;
+        padding: 20px;
+        border-width: 1px;
+        border-color: #e2e8f0;
+    }
 
-  .placeholder-text {
-    font-size: 16px;
-    color: #64748b;
-  }
+    .card-header {
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 16px;
+        border-bottom-width: 1px;
+        border-bottom-color: #f1f5f9;
+        padding-bottom: 12px;
+    }
 
-  .card {
-    width: 100%;
-    background-color: #ffffff;
-    border-radius: 16px;
-    padding: 20px;
-    border-width: 1px;
-    border-color: #e2e8f0;
-  }
+    .card-title {
+        font-size: 16px;
+        font-weight: 600;
+        color: #334155;
+    }
 
-  .card-header {
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 16px;
-    border-bottom-width: 1px;
-    border-bottom-color: #f1f5f9;
-    padding-bottom: 12px;
-  }
+    .card-time {
+        font-size: 12px;
+        color: #94a3b8;
+    }
 
-  .card-title {
-    font-size: 16px;
-    font-weight: 600;
-    color: #334155;
-  }
+    .card-content {
+        display: flex;
+        flex-direction: column;
+    }
 
-  .card-time {
-    font-size: 12px;
-    color: #94a3b8;
-  }
+    .preview-image {
+        width: 100%;
+        border-radius: 8px;
+        background-color: #f1f5f9;
+        margin-bottom: 16px;
+    }
 
-  .card-content {
-    display: flex;
-    flex-direction: column;
-  }
+    .path-container {
+        background-color: #f8fafc;
+        padding: 12px;
+        border-radius: 8px;
+        border-width: 1px;
+        border-color: #e2e8f0;
+    }
 
-  .preview-image {
-    width: 100%;
-    border-radius: 8px;
-    background-color: #f1f5f9;
-    margin-bottom: 16px;
-  }
+    .path-label {
+        font-size: 12px;
+        color: #64748b;
+        margin-bottom: 4px;
+    }
 
-  .path-container {
-    background-color: #f8fafc;
-    padding: 12px;
-    border-radius: 8px;
-    border-width: 1px;
-    border-color: #e2e8f0;
-  }
+    .path-value {
+        font-size: 12px;
+        color: #334155;
+        line-height: 1.5;
+    }
 
-  .path-label {
-    font-size: 12px;
-    color: #64748b;
-    margin-bottom: 4px;
-  }
+    .action-bar {
+        padding: 24px;
+        background-color: #ffffff;
+        border-top-width: 1px;
+        border-top-color: #e2e8f0;
+        padding-bottom: 40px;
+    }
 
-  .path-value {
-    font-size: 12px;
-    color: #334155;
-    line-height: 1.5;
-  }
+    .btn {
+        height: 50px;
+        border-radius: 25px;
+    }
 
-  .action-bar {
-    padding: 24px;
-    background-color: #ffffff;
-    border-top-width: 1px;
-    border-top-color: #e2e8f0;
-    padding-bottom: 40px;
-  }
+    .btn-primary {
+        background-color: #6366f1;
+        color: #ffffff;
+    }
 
-  .btn {
-    height: 50px;
-    border-radius: 25px;
-  }
-
-  .btn-primary {
-    background-color: #6366f1;
-    color: #ffffff;
-  }
-
-  .btn-hover {
-    background-color: #4f46e5;
-  }
+    .btn-hover {
+        background-color: #4f46e5;
+    }
 </style>
