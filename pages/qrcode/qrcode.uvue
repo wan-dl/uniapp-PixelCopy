@@ -86,8 +86,13 @@ export default {
           this.isScanning = false
         },
         fail: (error : string) => {
-          this.errorMsg = error
-          this.isScanning = false
+          if (error === 'SCAN_CANCELLED') {
+            // 用户取消扫描，只重置状态，不显示错误
+            this.isScanning = false
+          } else {
+            this.errorMsg = error
+            this.isScanning = false
+          }
         }
       })
     },
@@ -112,6 +117,12 @@ export default {
         }
       })
     }
+  },
+  onShow() {
+    // 页面显示时重置所有状态
+    this.isScanning = false
+    this.scanResult = ''
+    this.errorMsg = ''
   },
   onUnload() {
     if (this.isScanning) {

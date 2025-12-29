@@ -46,6 +46,7 @@ var previewView : PreviewView | null = null
 var cameraProvider : ProcessCameraProvider | null = null
 var scanner : BarcodeScanner | null = null
 var galleryButton : ImageButton | null = null
+var backButton : ImageButton | null = null
 
 const PICK_IMAGE_REQUEST_CODE = 1001
 
@@ -87,7 +88,7 @@ export const stopScan : StopScan = function () {
     cameraProvider!.unbindAll()
   }
   
-  if (previewView != null || galleryButton != null) {
+  if (previewView != null || galleryButton != null || backButton != null) {
     const activity = UTSAndroid.getUniActivity()
     if (activity != null) {
       const rootView = activity.getWindow().getDecorView().findViewById(android.R.id.content) as FrameLayout
@@ -97,6 +98,9 @@ export const stopScan : StopScan = function () {
       if (galleryButton != null) {
         rootView.removeView(galleryButton)
       }
+      if (backButton != null) {
+        rootView.removeView(backButton)
+      }
     }
   }
   
@@ -105,6 +109,7 @@ export const stopScan : StopScan = function () {
   cameraProvider = null
   scanner = null
   galleryButton = null
+  backButton = null
 }
 
 function startCamera(activity : Activity) : void {
@@ -117,6 +122,9 @@ function startCamera(activity : Activity) : void {
       const rootView = activity.getWindow().getDecorView().findViewById(android.R.id.content) as FrameLayout
       rootView.addView(previewView)
       
+      // 添加返回按钮
+      addBackButton(activity, rootView)
+      
       // 添加相册按钮
       addGalleryButton(activity, rootView)
     }
@@ -124,6 +132,67 @@ function startCamera(activity : Activity) : void {
     cameraProvider = cameraProviderFuture.get() as ProcessCameraProvider
     bindPreview(activity)
   }, mainExecutor)
+}
+
+function addBackButton(activity : Activity, rootView : FrameLayout) : void {
+  backButton = new ImageButton(activity)
+  
+  const dp = activity.getResources().getDisplayMetrics().density
+  const buttonSize = (48 * dp).toInt()
+  const marginLeft = (24 * dp).toInt()
+  const marginTop = (60 * dp).toInt()
+  const cornerRadius = (24 * dp).toFloat()
+  
+  // Create back arrow icon bitmap
+  const iconBitmap = createBackIcon(activity, (24 * dp).toInt())
+  backButton!.setImageBitmap(iconBitmap)
+  backButton!.setScaleType(ImageView.ScaleType.CENTER)
+  
+  // Create rounded background with semi-transparent gray
+  const drawable = new GradientDrawable()
+  drawable.setColor(Color.parseColor("#80000000"))
+  drawable.setCornerRadius(cornerRadius)
+  backButton!.setBackground(drawable)
+  
+  const params = new FrameLayout.LayoutParams(buttonSize, buttonSize)
+  params.gravity = Gravity.TOP | Gravity.START
+  params.setMargins(marginLeft, marginTop, 0, 0)
+  backButton!.setLayoutParams(params)
+  
+  backButton!.setOnClickListener((v) => {
+    // 先通知页面重置状态
+    if (currentOptions != null && currentOptions!.fail != null) {
+      currentOptions!.fail!('SCAN_CANCELLED')
+    }
+    stopScan()
+  })
+  
+  rootView.addView(backButton)
+}
+
+function createBackIcon(activity : Activity, size : Int) : Bitmap {
+  const bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
+  const canvas = new Canvas(bitmap)
+  const paint = new Paint()
+  paint.setColor(Color.WHITE)
+  paint.setStyle(Paint.Style.STROKE)
+  paint.setStrokeWidth(3.0.toFloat())
+  paint.setAntiAlias(true)
+  paint.setStrokeCap(Paint.Cap.ROUND)
+  paint.setStrokeJoin(Paint.Join.ROUND)
+  
+  // Draw back arrow
+  const centerY = size / 2.0.toFloat()
+  const arrowSize = size * 0.4.toFloat()
+  
+  // Arrow shaft
+  canvas.drawLine(size * 0.7.toFloat(), centerY, size * 0.3.toFloat(), centerY, paint)
+  
+  // Arrow head
+  canvas.drawLine(size * 0.3.toFloat(), centerY, size * 0.45.toFloat(), centerY - arrowSize * 0.5.toFloat(), paint)
+  canvas.drawLine(size * 0.3.toFloat(), centerY, size * 0.45.toFloat(), centerY + arrowSize * 0.5.toFloat(), paint)
+  
+  return bitmap
 }
 
 function addGalleryButton(activity : Activity, rootView : FrameLayout) : void {
