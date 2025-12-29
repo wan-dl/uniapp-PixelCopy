@@ -1,0 +1,30 @@
+import { CaptureScreenErrorCode, CaptureScreenFail } from "./interface.uts"
+
+/**
+ * 错误主题
+ */
+export const UniErrorSubject = 'android-PixedCopy';
+
+/**
+ * 错误信息
+ */
+export const CaptureScreenErrors : Map<CaptureScreenErrorCode, string> = new Map([
+  [9010001, '截图失败'],
+  [9010002, '保存文件失败'],
+  [9010003, '权限不足'],
+]);
+
+/**
+ * 错误对象实现
+ */
+export class CaptureScreenFailImpl extends UniError implements CaptureScreenFail {
+  
+  override errCode: CaptureScreenErrorCode
+
+  constructor(errCode : CaptureScreenErrorCode) {
+    super();
+    this.errSubject = UniErrorSubject;
+    this.errCode = errCode;
+    this.errMsg = CaptureScreenErrors.get(errCode) ?? "";
+  }
+}

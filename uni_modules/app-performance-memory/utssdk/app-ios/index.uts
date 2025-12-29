@@ -1,0 +1,21 @@
+import { getMemory } from '../interface.uts'
+
+// import { Locale } from 'Foundation';
+
+// import { Int32, Int, Misc } from "Swift";
+
+// import { task_vm_info_data_t, task_flavor_t, TASK_VM_INFO } from "Darwin.Mach.task_info";
+// import { mach_task_self_ } from "Darwin.Mach.mach_init";
+
+export const getAppMemory : getMemory = function () : UTSJSONObject {
+    
+    let result : UTSJSONObject = {
+        "TotalPss": 0
+    };
+    
+    let val = getAppMemoryUsage()
+    if (val != null) {
+        result["TotalPss"] = val;
+    };
+    return result; 
+}

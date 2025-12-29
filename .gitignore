@@ -1,0 +1,10 @@
+node_modules/*
+!node_modules/.bin/
+!node_modules/@dcloudio/
+.project
+unpackage/
+.DS_Store
+.hbuilderx/
+__image_snapshots__/
+__snapshot__
+/code-review/node_modules

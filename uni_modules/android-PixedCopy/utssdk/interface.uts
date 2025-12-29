@@ -1,0 +1,40 @@
+/**
+ * interface.uts
+ * Android PixelCopy 截图插件接口定义
+ */
+
+/**
+ * 截图API参数
+ */
+export type CaptureScreenOptions = {
+  success ?: (res : CaptureScreenResult) => void
+  fail ?: (res : CaptureScreenFail) => void
+  complete ?: (res : any) => void
+}
+
+/**
+ * 截图结果
+ */
+export type CaptureScreenResult = {
+  filePath : string,
+  width : number,
+  height : number
+}
+
+/**
+ * 错误码
+ * - 9010001 截图失败
+ * - 9010002 保存文件失败
+ * - 9010003 权限不足
+ */
+export type CaptureScreenErrorCode = 9010001 | 9010002 | 9010003;
+
+/**
+ * 截图错误回调参数
+ */
+export interface CaptureScreenFail extends IUniError {
+  errCode : CaptureScreenErrorCode
+};
+
+/* 截图函数定义 */
+export type CaptureScreen = (options : CaptureScreenOptions) => void

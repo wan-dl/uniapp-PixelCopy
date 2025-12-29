@@ -1,0 +1,77 @@
+import { getAppMemory } from '@/uni_modules/app-performance-memory';
+import { ref } from 'vue';
+
+export type MemoryObj = {
+  TotalPss : string;
+  TotalPrivateDirty : string;
+  TotalSharedDirty : string;
+};
+
+export const globalMemoryData = ref<MemoryObj>({
+  TotalPss: '0',
+  TotalPrivateDirty: '0',
+  TotalSharedDirty: '0'
+});
+
+export const globalHistoryData = ref<number[]>([]);
+export const globalIsMonitoring = ref(false);
+let globalTimerId : number = 0;
+
+export function fetchMemoryData() {
+  let data = getAppMemory() as UTSJSONObject;
+  const pssStr = data["TotalPss"] as string;
+  const pssNum = parseFloat(pssStr);
+  
+  const newData = {
+    TotalPss: pssStr,
+    TotalPrivateDirty: data["TotalPrivateDirty"] as string,
+    TotalSharedDirty: data["TotalSharedDirty"] as string
+  } as MemoryObj;
+  
+  globalMemoryData.value = newData;
+  
+  // Add to history
+  if (!isNaN(pssNum)) {
+    globalHistoryData.value.push(pssNum);
+    if (globalHistoryData.value.length > 30) {
+      globalHistoryData.value.shift();
+    }
+  }
+  
+  uni.setStorageSync('memory_cache_data', newData);
+}
+
+export function toggleGlobalMonitoring() {
+  if (globalIsMonitoring.value) {
+    if (globalTimerId != 0) {
+      clearInterval(globalTimerId);
+      globalTimerId = 0;
+    }
+    globalIsMonitoring.value = false;
+  } else {
+    globalIsMonitoring.value = true;
+    fetchMemoryData(); 
+    globalTimerId = setInterval(() => {
+      fetchMemoryData();
+    }, 1000);
+  }
+}
+
+// Initialization
+const cached = uni.getStorageSync('memory_cache_data');
+if (cached != null && cached != "") {
+  let cachedObj : UTSJSONObject | null = null;
+  if (typeof cached == 'string') {
+    cachedObj = JSON.parse(cached as string) as UTSJSONObject;
+  } else {
+    cachedObj = cached as UTSJSONObject;
+  }
+
+  if (cachedObj != null) {
+    globalMemoryData.value = {
+      TotalPss: (cachedObj["TotalPss"] != null) ? (cachedObj["TotalPss"] as string) : '0',
+      TotalPrivateDirty: (cachedObj["TotalPrivateDirty"] != null) ? (cachedObj["TotalPrivateDirty"] as string) : '0',
+      TotalSharedDirty: (cachedObj["TotalSharedDirty"] != null) ? (cachedObj["TotalSharedDirty"] as string) : '0'
+    } as MemoryObj;
+  }
+}

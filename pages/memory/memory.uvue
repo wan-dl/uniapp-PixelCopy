@@ -1,0 +1,360 @@
+<template>
+  <view class="page-container">
+    <view class="nav-bar">
+      <text class="nav-title">内存监控</text>
+    </view>
+
+    <scroll-view class="content-area" scroll-y="true">
+      <!-- Main Metric Card -->
+      <view class="metric-card main-card">
+        <text class="metric-label">App 总内存 (PSS)</text>
+        <view class="metric-value-container">
+          <text class="metric-value">{{ globalMemoryData.TotalPss }}</text>
+          <text class="metric-unit">MB</text>
+        </view>
+        <text class="metric-desc">当前应用占用的实际物理内存</text>
+      </view>
+
+      <!-- Chart Card -->
+      <view class="metric-card chart-card">
+        <view class="card-inner-header">
+          <text class="card-inner-title">内存趋势 (最近 30 次)</text>
+          <text class="data-count-text">采样数: {{ globalHistoryData.length }}</text>
+        </view>
+        <canvas id="memoryChart" canvas-id="memoryChart" class="memory-canvas"></canvas>
+      </view>
+
+      <!-- Detailed Metrics Grid -->
+      <view class="details-grid">
+        <view class="metric-card detail-card detail-card-left">
+          <text class="detail-label">私有内存</text>
+          <view class="detail-value-row">
+            <text class="detail-value">{{ globalMemoryData.TotalPrivateDirty != '' ? globalMemoryData.TotalPrivateDirty : '0' }}</text>
+            <text class="detail-unit">MB</text>
+          </view>
+          <text class="detail-desc">Private Dirty</text>
+        </view>
+        <view class="metric-card detail-card">
+          <text class="detail-label">共享内存</text>
+          <view class="detail-value-row">
+            <text class="detail-value">{{ globalMemoryData.TotalSharedDirty != '' ? globalMemoryData.TotalSharedDirty : '0' }}</text>
+            <text class="detail-unit">MB</text>
+          </view>
+          <text class="detail-desc">Shared Dirty</text>
+        </view>
+      </view>
+    </scroll-view>
+
+    <!-- Bottom Action -->
+    <view class="action-bar">
+      <button class="btn btn-secondary flex-1 margin-right-sm" hover-class="btn-hover" @click="handleRefresh">
+        单次刷新
+      </button>
+      <button 
+        class="btn flex-1" 
+        :class="globalIsMonitoring ? 'btn-danger' : 'btn-primary'"
+        hover-class="btn-hover" 
+        @click="handleToggle"
+      >
+        {{ globalIsMonitoring ? '停止监控' : '持续监控' }}
+      </button>
+    </view>
+  </view>
+</template>
+
+<script setup lang="uts">
+  import { globalMemoryData, globalHistoryData, globalIsMonitoring, fetchMemoryData, toggleGlobalMonitoring } from './memoryStore.uts';
+  import { onMounted, onUnmounted, watch } from 'vue';
+  import { onShow } from '@dcloudio/uni-app';
+
+  function handleRefresh() {
+    fetchMemoryData();
+  }
+
+  function handleToggle() {
+    toggleGlobalMonitoring();
+  }
+
+  function drawChart() {
+    const canvas = uni.getElementById('memoryChart') as UniCanvasElement | null;
+    if (canvas == null) return;
+    const ctx = canvas.getContext('2d');
+    if (ctx == null) return;
+
+    const dataList = globalHistoryData.value;
+    if (dataList.length < 2) return;
+
+    const width = canvas.width;
+    const height = canvas.height;
+    const padding = 20.0;
+
+    const chartWidth = width - padding * 2.0;
+    const chartHeight = height - padding * 2.0;
+
+    let maxVal = 0.0;
+    let minVal = 1000000.0;
+    for (let i = 0; i < dataList.length; i++) {
+      const val = dataList[i];
+      if (val > maxVal) maxVal = val;
+      if (val < minVal) minVal = val;
+    }
+    
+    maxVal = maxVal * 1.1;
+    minVal = minVal * 0.9;
+    
+    const range = maxVal - minVal;
+    const safeRange = range > 0 ? range : 1.0;
+
+    ctx.clearRect(0, 0, width, height);
+
+    ctx.strokeStyle = '#f1f5f9';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    for (let i = 0; i <= 4; i++) {
+      const y = padding + (chartHeight / 4.0) * i;
+      ctx.moveTo(padding, y);
+      ctx.lineTo(width - padding, y);
+    }
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.strokeStyle = '#6366f1';
+    ctx.lineWidth = 2;
+    ctx.lineJoin = 'round';
+
+    for (let i = 0; i < dataList.length; i++) {
+      const val = dataList[i];
+      const x = padding + (chartWidth / 29.0) * i;
+      const y = height - padding - ((val - minVal) / safeRange) * chartHeight;
+      
+      if (i == 0) {
+        ctx.moveTo(x, y);
+      } else {
+        ctx.lineTo(x, y);
+      }
+    }
+    ctx.stroke();
+
+    ctx.lineTo(padding + (chartWidth / 29.0) * (dataList.length - 1), height - padding);
+    ctx.lineTo(padding, height - padding);
+    ctx.fillStyle = 'rgba(99, 102, 241, 0.1)';
+    ctx.fill();
+  }
+
+  // Watch for data changes to update chart
+  watch(():number => { return globalHistoryData.value.length }, () => {
+    drawChart();
+  });
+
+  onMounted(() => {
+    drawChart();
+  });
+
+  onShow(() => {
+    drawChart();
+  });
+</script>
+
+<style>
+  .page-container {
+    flex: 1;
+    background-color: #f8fafc;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .nav-bar {
+    height: 44px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    background-color: #ffffff;
+    border-bottom-width: 1px;
+    border-bottom-color: #e2e8f0;
+    padding-top: 20px;
+    padding-bottom: 10px;
+  }
+
+  .nav-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: #0f172a;
+  }
+
+  .content-area {
+    flex: 1;
+    padding: 24px;
+  }
+
+  .metric-card {
+    background-color: #ffffff;
+    border-radius: 16px;
+    padding: 20px;
+    border-width: 1px;
+    border-color: #e2e8f0;
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 20px;
+  }
+
+  .main-card {
+    align-items: center;
+    justify-content: center;
+    padding: 32px 20px;
+  }
+
+  .chart-card {
+    padding: 16px;
+  }
+
+  .card-inner-header {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+
+  .card-inner-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #475569;
+  }
+
+  .data-count-text {
+    font-size: 12px;
+    color: #94a3b8;
+    background-color: #f1f5f9;
+    padding: 2px 8px;
+    border-radius: 10px;
+  }
+
+  .memory-canvas {
+    width: 100%;
+    height: 150px;
+    background-color: #ffffff;
+  }
+
+  .metric-label {
+    font-size: 16px;
+    color: #64748b;
+    margin-bottom: 12px;
+  }
+
+  .metric-value-container {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-end;
+    margin-bottom: 8px;
+  }
+
+  .metric-value {
+    font-size: 48px;
+    font-weight: 700;
+    color: #6366f1; /* Indigo 500 */
+    line-height: 1;
+  }
+
+  .metric-unit {
+    font-size: 16px;
+    color: #94a3b8;
+    margin-left: 6px;
+    font-weight: 500;
+    margin-bottom: 6px; /* Adjustment for flex-end alignment */
+  }
+
+  .metric-desc {
+    font-size: 12px;
+    color: #94a3b8;
+  }
+
+  .details-grid {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+  }
+
+  .detail-card {
+    flex: 1;
+  }
+
+  .detail-card-left {
+    margin-right: 16px;
+  }
+
+  .detail-label {
+    font-size: 14px;
+    color: #64748b;
+    margin-bottom: 8px;
+  }
+
+  .detail-value-row {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-end;
+    margin-bottom: 4px;
+  }
+
+  .detail-value {
+    font-size: 24px;
+    font-weight: 600;
+    color: #334155;
+  }
+
+  .detail-unit {
+    font-size: 12px;
+    color: #94a3b8;
+    margin-left: 4px;
+    margin-bottom: 4px; /* Adjustment for flex-end alignment */
+  }
+
+  .detail-desc {
+    font-size: 12px;
+    color: #cbd5e1;
+  }
+
+  .action-bar {
+    padding: 24px;
+    background-color: #ffffff;
+    border-top-width: 1px;
+    border-top-color: #e2e8f0;
+    padding-bottom: 40px;
+    display: flex;
+    flex-direction: row;
+  }
+
+  .btn {
+    height: 50px;
+    border-radius: 25px;
+  }
+
+  .btn-primary {
+    background-color: #6366f1;
+    color: #ffffff;
+  }
+
+  .btn-secondary {
+    background-color: #ffffff;
+    border-width: 1px;
+    border-color: #cbd5e1;
+    color: #64748b;
+  }
+
+  .btn-danger {
+    background-color: #ef4444;
+    color: #ffffff;
+  }
+
+  .btn-hover {
+    opacity: 0.8;
+  }
+
+  .flex-1 {
+    flex: 1;
+  }
+
+  .margin-right-sm {
+    margin-right: 12px;
+  }
+</style>

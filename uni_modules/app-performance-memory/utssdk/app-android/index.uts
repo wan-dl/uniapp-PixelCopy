@@ -1,0 +1,45 @@
+import { getMemory } from '../interface.uts'
+
+import Process from 'android.os.Process';
+import Context from 'android.content.Context';
+// import * as Fragment from 'androidx.fragment.app.Fragment'
+
+import ActivityManager from "android.app.ActivityManager"
+
+export const getAppMemory : getMemory = function () : UTSJSONObject {
+
+    let result : UTSJSONObject = {
+        "TotalPss": 0,
+        "TotalPrivateDirty": 0,
+        "TotalSharedDirty": 0
+    }
+
+    // 获取系统的 ActivityManager 服务
+    // const activityManager= requireContext().getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager;
+    const activityManager = UTSAndroid.getAppContext()!.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager;
+
+    // 获取当前进程的 PID（进程 ID）
+    // const pidArray = new IntArray([Process.myPid()]);
+    const pidArray = [Process.myPid()].toKotlinList().toIntArray();
+    const memoryInfoArray = activityManager.getProcessMemoryInfo(pidArray);
+
+    // 获取当前进程的内存信息
+    const memoryInfo = memoryInfoArray[0];
+
+    // 获取总的 PSS（Proportional Set Size），并将其从 KB 转换为 MB
+    const totalPss = (memoryInfo.getTotalPss().toFloat() / 1024).toFixed(2);
+    result["TotalPss"] = totalPss;
+
+    // 获取总的私有脏页内存，并将其从 KB 转换为 MB
+    const totalPrivateDirty = (memoryInfo.getTotalPrivateDirty().toFloat() / 1024).toFixed(2);
+    result["TotalPrivateDirty"] = totalPrivateDirty;
+
+    // 获取总的共享脏页内存，并将其从 KB 转换为 MB
+    const totalSharedDirty = (memoryInfo.getTotalSharedDirty().toFloat() / 1024).toFixed(2);
+    result["TotalSharedDirty"] = totalSharedDirty;
+
+    // console.log(result)
+    // 返回包含内存使用信息的字符串
+    // return `Total PSS: ${totalPss}MB\nTotal Private Dirty: ${totalPrivateDirty}MB\nTotal Shared Dirty: ${totalSharedDirty}MB`;
+    return result;
+}

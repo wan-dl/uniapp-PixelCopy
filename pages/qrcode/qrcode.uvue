@@ -1,0 +1,276 @@
+<template>
+  <view class="page-container">
+    <view class="nav-bar">
+      <text class="nav-title">扫码功能</text>
+    </view>
+
+    <view class="content-area">
+      <!-- 扫描状态/占位展示 -->
+      <view class="placeholder-section" v-if="scanResult == '' && errorMsg == ''">
+        <view class="scan-icon-wrapper">
+          <view class="scan-frame">
+            <view class="scan-line" :class="{ 'scanning-animation': isScanning }"></view>
+          </view>
+        </view>
+        <text class="placeholder-text">{{ isScanning ? '正在初始化相机...' : '点击下方按钮开始扫描' }}</text>
+      </view>
+
+      <!-- 结果展示卡片 -->
+      <view v-if="scanResult != ''" class="card result-card">
+        <view class="card-header">
+          <text class="card-title">扫描成功</text>
+          <text class="card-time">刚刚</text>
+        </view>
+        <view class="card-content">
+          <text class="result-value">{{ scanResult }}</text>
+        </view>
+      </view>
+
+      <!-- 错误展示卡片 -->
+      <view v-if="errorMsg != ''" class="card error-card">
+        <view class="card-header">
+          <text class="card-title error-title">发生错误</text>
+        </view>
+        <view class="card-content">
+          <text class="error-message">{{ errorMsg }}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 底部操作区 -->
+    <view class="action-bar">
+      <button
+        class="btn btn-primary"
+        hover-class="btn-hover"
+        @click="handleScan"
+        :disabled="isScanning"
+      >
+        {{ isScanning ? '正在启动...' : '开始扫描' }}
+      </button>
+
+      <button
+        class="btn btn-secondary"
+        hover-class="btn-secondary-hover"
+        @click="handleStop"
+        :disabled="!isScanning"
+        :class="{ 'btn-disabled': !isScanning }"
+      >
+        停止扫描
+      </button>
+    </view>
+  </view>
+</template>
+
+<script lang="uts">
+import { startScan, stopScan } from '@/uni_modules/qr-code-scanning'
+
+export default {
+  data() {
+    return {
+      scanResult: '' as string,
+      errorMsg: '' as string,
+      isScanning: false as boolean
+    }
+  },
+  methods: {
+    handleScan() {
+      this.scanResult = ''
+      this.errorMsg = ''
+      this.isScanning = true
+
+      startScan({
+        success: (result : string) => {
+          this.scanResult = result
+          this.isScanning = false
+        },
+        fail: (error : string) => {
+          this.errorMsg = error
+          this.isScanning = false
+        }
+      })
+    },
+    handleStop() {
+      stopScan()
+      this.isScanning = false
+    }
+  },
+  onUnload() {
+    if (this.isScanning) {
+      stopScan()
+    }
+  }
+}
+</script>
+
+<style>
+.page-container {
+  flex: 1;
+  background-color: #f8fafc;
+  display: flex;
+  flex-direction: column;
+}
+
+.nav-bar {
+  height: 44px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  background-color: #ffffff;
+  border-bottom-width: 1px;
+  border-bottom-color: #e2e8f0;
+  padding-top: 20px; /* Status bar spacing simulation if needed, though usually handled by system */
+  padding-bottom: 10px;
+}
+
+.nav-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.content-area {
+  flex: 1;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.placeholder-section {
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 40px;
+}
+
+.scan-icon-wrapper {
+  width: 120px;
+  height: 120px;
+  background-color: #e0e7ff;
+  border-radius: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 24px;
+}
+
+.scan-frame {
+  width: 60px;
+  height: 60px;
+  border-width: 3px;
+  border-color: #6366f1;
+  border-radius: 8px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.scan-line {
+  width: 50px;
+  height: 2px;
+  background-color: #ef4444;
+  opacity: 0.6;
+}
+
+.placeholder-text {
+  font-size: 16px;
+  color: #64748b;
+  margin-top: 16px;
+}
+
+.card {
+  width: 100%;
+  background-color: #ffffff;
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 20px;
+  border-width: 1px;
+  border-color: #e2e8f0;
+  /* Shadow simulation via border/color since pure shadow might vary */
+  /* box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); In UVUE check support, often limited */
+}
+
+.card-header {
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  border-bottom-width: 1px;
+  border-bottom-color: #f1f5f9;
+  padding-bottom: 12px;
+}
+
+.card-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #10b981; /* Success Green */
+}
+
+.error-title {
+  color: #ef4444;
+}
+
+.card-time {
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+.card-content {
+  padding-top: 8px;
+}
+
+.result-value {
+  font-size: 16px;
+  color: #334155;
+  line-height: 24px;
+}
+
+.error-message {
+  font-size: 14px;
+  color: #ef4444;
+}
+
+.action-bar {
+  padding: 24px;
+  background-color: #ffffff;
+  border-top-width: 1px;
+  border-top-color: #e2e8f0;
+  padding-bottom: 40px; /* Bottom safe area */
+}
+
+.btn {
+  height: 50px;
+  border-radius: 25px;
+  margin-bottom: 12px;
+}
+
+.btn-primary {
+  background-color: #6366f1; /* Indigo 500 */
+}
+
+.btn-hover {
+  background-color: #4f46e5; /* Indigo 600 */
+}
+
+.btn-secondary {
+  background-color: #ffffff;
+  border-width: 1px;
+  border-color: #cbd5e1;
+}
+
+.btn-secondary-hover {
+  background-color: #f1f5f9;
+}
+
+.btn-disabled {
+  background-color: #f1f5f9;
+  border-color: #e2e8f0;
+  opacity: 0.6;
+}
+
+/* Button text color styling needs to be implicit or explicit based on parent */
+/* In UVUE/Native, text inside button is often auto-styled or needs explicit text style */
+/* Standard <button> in uni-app usually handles color, but let's be safe */
+</style>

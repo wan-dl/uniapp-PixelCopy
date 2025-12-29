@@ -1,0 +1,155 @@
+import { StartScan, StopScan, ScanOptions } from '../interface.uts'
+import Activity from 'android.app.Activity'
+import PreviewView from 'androidx.camera.view.PreviewView'
+import ProcessCameraProvider from 'androidx.camera.lifecycle.ProcessCameraProvider'
+import CameraSelector from 'androidx.camera.core.CameraSelector'
+import Preview from 'androidx.camera.core.Preview'
+import ImageAnalysis from 'androidx.camera.core.ImageAnalysis'
+import ImageProxy from 'androidx.camera.core.ImageProxy'
+import BarcodeScanning from 'com.google.mlkit.vision.barcode.BarcodeScanning'
+import BarcodeScanner from 'com.google.mlkit.vision.barcode.BarcodeScanner'
+import InputImage from 'com.google.mlkit.vision.common.InputImage'
+import Barcode from 'com.google.mlkit.vision.barcode.common.Barcode'
+import Executors from 'java.util.concurrent.Executors'
+import Executor from 'java.util.concurrent.Executor'
+import FrameLayout from 'android.widget.FrameLayout'
+import ViewGroup from 'android.view.ViewGroup'
+import Runnable from 'java.lang.Runnable'
+import OnSuccessListener from 'com.google.android.gms.tasks.OnSuccessListener'
+import OnFailureListener from 'com.google.android.gms.tasks.OnFailureListener'
+import Exception from 'java.lang.Exception'
+import ContextCompat from 'androidx.core.content.ContextCompat'
+import ArrayList from 'java.util.ArrayList'
+import LifecycleOwner from 'androidx.lifecycle.LifecycleOwner'
+
+var currentOptions : ScanOptions | null = null
+var previewView : PreviewView | null = null
+var cameraProvider : ProcessCameraProvider | null = null
+var scanner : BarcodeScanner | null = null
+
+export const startScan : StartScan = function (options : ScanOptions) {
+  currentOptions = options
+  const activity = UTSAndroid.getUniActivity()!
+  
+  UTSAndroid.requestSystemPermission(
+    activity,
+    ['android.permission.CAMERA'],
+    (allRight: boolean, grantedList: MutableList<string>) => {
+      if (allRight) {
+        scanner = BarcodeScanning.getClient()
+        
+        // 创建预览视图
+        previewView = new PreviewView(activity)
+        previewView!.setLayoutParams(new FrameLayout.LayoutParams(
+          ViewGroup.LayoutParams.MATCH_PARENT,
+          ViewGroup.LayoutParams.MATCH_PARENT
+        ))
+        
+        startCamera(activity)
+      } else {
+        if (currentOptions != null && currentOptions!.fail != null) {
+          currentOptions!.fail!('Camera permission denied')
+        }
+      }
+    },
+    (doNotAskAgain: boolean, grantedList: MutableList<string>) => {
+      if (currentOptions != null && currentOptions!.fail != null) {
+        currentOptions!.fail!('Camera permission denied')
+      }
+    }
+  )
+}
+
+export const stopScan : StopScan = function () {
+  if (cameraProvider != null) {
+    cameraProvider!.unbindAll()
+  }
+  
+  if (previewView != null) {
+    const activity = UTSAndroid.getUniActivity()
+    if (activity != null) {
+      const rootView = activity.getWindow().getDecorView().findViewById(android.R.id.content) as FrameLayout
+      rootView.removeView(previewView)
+    }
+  }
+  
+  currentOptions = null
+  previewView = null
+  cameraProvider = null
+  scanner = null
+}
+
+function startCamera(activity : Activity) : void {
+  const cameraProviderFuture = ProcessCameraProvider.getInstance(activity)
+  const mainExecutor = ContextCompat.getMainExecutor(activity)
+  
+  cameraProviderFuture.addListener(() => {
+    // 添加到当前页面
+    if (previewView != null) {
+      const rootView = activity.getWindow().getDecorView().findViewById(android.R.id.content) as FrameLayout
+      rootView.addView(previewView)
+    }
+
+    cameraProvider = cameraProviderFuture.get() as ProcessCameraProvider
+    bindPreview(activity)
+  }, mainExecutor)
+}
+
+function bindPreview(activity : Activity) : void {
+  const provider = cameraProvider
+  if (provider == null) return
+  
+  const preview = new Preview.Builder().build()
+  preview.setSurfaceProvider(previewView!.getSurfaceProvider())
+  
+  const cameraSelector = new CameraSelector.Builder()
+    .requireLensFacing(CameraSelector.LENS_FACING_BACK)
+    .build()
+  
+  const imageAnalysis = new ImageAnalysis.Builder()
+    .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+    .build()
+  
+  const executor = Executors.newSingleThreadExecutor()
+  
+  imageAnalysis.setAnalyzer(executor, (imageProxy : ImageProxy) => {
+    processImage(imageProxy)
+  })
+  
+  provider.bindToLifecycle(activity as LifecycleOwner, cameraSelector, preview, imageAnalysis)
+}
+
+function processImage(imageProxy : ImageProxy) : void {
+  const mediaImage = imageProxy.getImage()
+  if (mediaImage == null) {
+    imageProxy.close()
+    return
+  }
+  
+  const image = InputImage.fromMediaImage(mediaImage, imageProxy.getImageInfo().getRotationDegrees())
+  
+  scanner!.process(image)
+    .addOnSuccessListener((barcodes : MutableList<Barcode>) => {
+      if (barcodes.size > 0) {
+        const barcode = barcodes.get(0) as Barcode
+        const result = barcode.getRawValue()
+        if (result != null) {
+          const opts = currentOptions
+          if (opts != null && opts.success != null) {
+            opts.success!(result)
+          }
+          stopScan()
+        }
+      }
+      imageProxy.close()
+    })
+    .addOnFailureListener((e : Exception) => {
+      const opts = currentOptions
+      if (opts != null && opts.fail != null) {
+        const msg = e.message
+        opts.fail!(msg != null ? msg : 'Scan failed')
+      }
+      imageProxy.close()
+      stopScan()
+    })
+}

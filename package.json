@@ -1,0 +1,44 @@
+{
+  "name": "uni-pixelcopy",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "logcat:web": "uni-logcat web",
+    "logcat:app-android": "uni-logcat app-android",
+    "logcat:app-ios": "uni-logcat app-ios",
+    "logcat:app-harmony": "uni-logcat app-harmony",
+    "logcat:mp-weixin": "uni-logcat mp-weixin",
+    "logcat:mp-alipay": "uni-logcat mp-alipay",
+    "logcat:mp-baidu": "uni-logcat mp-baidu",
+    "logcat:mp-xhs": "uni-logcat mp-xhs",
+    "logcat:mp-toutiao": "uni-logcat mp-toutiao",
+    "logcat:mp-qq": "uni-logcat mp-qq",
+    "logcat:mp-360": "uni-logcat mp-360",
+    "logcat:mp-kuaishou": "uni-logcat mp-kuaishou",
+    "logcat:mp-lark": "uni-logcat mp-lark",
+    "logcat:mp-jd": "uni-logcat mp-jd",
+    "logcat:quickapp-huawei": "uni-logcat quickapp-webview-huawei",
+    "logcat:quickapp-union": "uni-logcat quickapp-webview-union",
+    "test:web": "uni-test web",
+    "test:app-android": "uni-test app-android",
+    "test:app-ios": "uni-test app-ios",
+    "test:app-harmony": "uni-test app-harmony",
+    "test:mp-weixin": "uni-test mp-weixin"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dcloud-wandl/uni-PixelCopy.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/dcloud-wandl/uni-PixelCopy/issues"
+  },
+  "homepage": "https://github.com/dcloud-wandl/uni-PixelCopy#readme",
+  "dependencies": {
+    "@dcloudio/hbuilderx-cli": "^1.1.2"
+  }
+}

@@ -1,0 +1,15 @@
+import { getMemory } from '../interface.uts';
+
+import { hidebug } from '@kit.PerformanceAnalysisKit';
+
+
+export const getAppMemory : getMemory = function () : UTSJSONObject {
+    let result  = new UTSJSONObject({
+        "TotalPss": 0
+    });
+    
+    let pss: bigint = hidebug.getPss();
+    let pssv: string = (Number(pss) / 1024).toFixed(2);
+    result['TotalPss'] = pssv;
+    return result;
+}

@@ -1,0 +1,17 @@
+/**
+ * 二维码扫描选项
+ */
+export type ScanOptions = {
+  success ?: (result : string) => void
+  fail ?: (error : string) => void
+}
+
+/**
+ * 开始扫描
+ */
+export type StartScan = (options : ScanOptions) => void
+
+/**
+ * 停止扫描
+ */
+export type StopScan = () => void
