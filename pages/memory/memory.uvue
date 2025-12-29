@@ -15,7 +15,7 @@
       <!-- Chart Card -->
       <view class="metric-card chart-card">
         <view class="card-inner-header">
-          <text class="card-inner-title">内存趋势 (最近 30 次)</text>
+          <text class="card-inner-title">内存趋势</text>
           <text class="data-count-text">采样数: {{ globalHistoryData.length }}</text>
         </view>
         <canvas id="memoryChart" canvas-id="memoryChart" class="memory-canvas"></canvas>
@@ -62,7 +62,6 @@
 <script setup lang="uts">
   import { globalMemoryData, globalHistoryData, globalIsMonitoring, fetchMemoryData, toggleGlobalMonitoring } from './memoryStore.uts';
   import { onMounted, onUnmounted, watch } from 'vue';
-  import { onShow } from '@dcloudio/uni-app';
 
   function handleRefresh() {
     fetchMemoryData();

@@ -21,23 +21,20 @@ export function fetchMemoryData() {
   let data = getAppMemory() as UTSJSONObject;
   const pssStr = data["TotalPss"] as string;
   const pssNum = parseFloat(pssStr);
-  
+
   const newData = {
     TotalPss: pssStr,
     TotalPrivateDirty: data["TotalPrivateDirty"] as string,
     TotalSharedDirty: data["TotalSharedDirty"] as string
   } as MemoryObj;
-  
+
   globalMemoryData.value = newData;
-  
+
   // Add to history
   if (!isNaN(pssNum)) {
     globalHistoryData.value.push(pssNum);
-    if (globalHistoryData.value.length > 30) {
-      globalHistoryData.value.shift();
-    }
   }
-  
+
   uni.setStorageSync('memory_cache_data', newData);
 }
 
@@ -50,7 +47,7 @@ export function toggleGlobalMonitoring() {
     globalIsMonitoring.value = false;
   } else {
     globalIsMonitoring.value = true;
-    fetchMemoryData(); 
+    fetchMemoryData();
     globalTimerId = setInterval(() => {
       fetchMemoryData();
     }, 1000);
