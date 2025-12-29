@@ -4,19 +4,29 @@
     <scroll-view class="content-area" scroll-y="true">
       <!-- Main Metric Card -->
       <view class="metric-card main-card">
-        <text class="metric-label">App 总内存 (PSS)</text>
+        <view class="main-card-header">
+          <text class="metric-label">App 总内存 (PSS)</text>
+          <view class="time-tag">
+            <text class="time-tag-text">更新于 {{ globalMemoryData.updateTime }}</text>
+          </view>
+        </view>
         <view class="metric-value-container">
           <text class="metric-value">{{ globalMemoryData.TotalPss }}</text>
           <text class="metric-unit">MB</text>
         </view>
-        <text class="metric-desc">当前应用占用的实际物理内存</text>
+        <view class="status-indicator">
+          <view class="dot" :class="globalIsMonitoring ? 'dot-active' : ''"></view>
+          <text class="metric-desc">{{ globalIsMonitoring ? '持续监控中' : '静态采样数据' }}</text>
+        </view>
       </view>
 
       <!-- Chart Card -->
       <view class="metric-card chart-card">
         <view class="card-inner-header">
-          <text class="card-inner-title">内存趋势</text>
-          <text class="data-count-text">采样数: {{ globalHistoryData.length }}</text>
+          <view class="title-with-icon">
+            <text class="card-inner-title">内存波动趋势</text>
+          </view>
+          <text class="data-count-text">采样点: {{ globalHistoryData.length }}</text>
         </view>
         <canvas id="memoryChart" canvas-id="memoryChart" class="memory-canvas"></canvas>
       </view>
@@ -29,7 +39,9 @@
             <text class="detail-value">{{ globalMemoryData.TotalPrivateDirty != '' ? globalMemoryData.TotalPrivateDirty : '0' }}</text>
             <text class="detail-unit">MB</text>
           </view>
-          <text class="detail-desc">Private Dirty</text>
+          <view class="detail-footer">
+            <text class="detail-desc">Private Dirty</text>
+          </view>
         </view>
         <view class="metric-card detail-card">
           <text class="detail-label">共享内存</text>
@@ -37,7 +49,9 @@
             <text class="detail-value">{{ globalMemoryData.TotalSharedDirty != '' ? globalMemoryData.TotalSharedDirty : '0' }}</text>
             <text class="detail-unit">MB</text>
           </view>
-          <text class="detail-desc">Shared Dirty</text>
+          <view class="detail-footer">
+            <text class="detail-desc">Shared Dirty</text>
+          </view>
         </view>
       </view>
     </scroll-view>
@@ -61,7 +75,8 @@
 
 <script setup lang="uts">
   import { globalMemoryData, globalHistoryData, globalIsMonitoring, fetchMemoryData, toggleGlobalMonitoring } from './memoryStore.uts';
-  import { onMounted, onUnmounted, watch } from 'vue';
+  import { onMounted, watch } from 'vue';
+  import { onShow } from '@dcloudio/uni-app';
 
   function handleRefresh() {
     fetchMemoryData();
@@ -147,7 +162,9 @@
   });
 
   onShow(() => {
-    drawChart();
+    setTimeout(() => {
+      drawChart();
+    }, 200);
   });
 </script>
 
@@ -198,10 +215,61 @@
     align-items: center;
     justify-content: center;
     padding: 32px 20px;
+    background: linear-gradient(to bottom right, #ffffff, #f1f5f9);
+    border-color: #e2e8f0;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  }
+
+  .main-card-header {
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+
+  .time-tag {
+    background-color: #f1f5f9;
+    padding: 4px 10px;
+    border-radius: 12px;
+  }
+
+  .time-tag-text {
+    font-size: 11px;
+    color: #64748b;
+    font-weight: 500;
+  }
+
+  .status-indicator {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    margin-top: 12px;
+  }
+
+  .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 3px;
+    background-color: #cbd5e1;
+    margin-right: 6px;
+  }
+
+  .dot-active {
+    background-color: #10b981;
+    box-shadow: 0 0 8px rgba(16, 185, 129, 0.5);
   }
 
   .chart-card {
-    padding: 16px;
+    padding: 20px;
+    box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+  }
+
+  .title-with-icon {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
   }
 
   .card-inner-header {
@@ -209,60 +277,64 @@
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 12px;
+    margin-bottom: 16px;
   }
 
   .card-inner-title {
     font-size: 14px;
     font-weight: 600;
-    color: #475569;
+    color: #334155;
   }
 
   .data-count-text {
-    font-size: 12px;
-    color: #94a3b8;
-    background-color: #f1f5f9;
+    font-size: 11px;
+    color: #64748b;
+    background-color: #f8fafc;
     padding: 2px 8px;
-    border-radius: 10px;
+    border-radius: 8px;
+    border-width: 1px;
+    border-color: #f1f5f9;
   }
 
   .memory-canvas {
     width: 100%;
-    height: 150px;
-    background-color: #ffffff;
+    height: 160px;
+    background-color: transparent;
   }
 
   .metric-label {
-    font-size: 16px;
+    font-size: 14px;
+    font-weight: 600;
     color: #64748b;
-    margin-bottom: 12px;
+    letter-spacing: 0.5px;
   }
 
   .metric-value-container {
     display: flex;
     flex-direction: row;
-    align-items: flex-end;
-    margin-bottom: 8px;
+    align-items: baseline;
+    margin-bottom: 4px;
   }
 
   .metric-value {
-    font-size: 48px;
-    font-weight: 700;
-    color: #6366f1; /* Indigo 500 */
+    font-size: 56px;
+    font-weight: 800;
+    color: #4f46e5;
     line-height: 1;
+    font-family: 'Courier New', Courier, monospace; /* Monospaced for numbers if possible */
   }
 
   .metric-unit {
-    font-size: 16px;
+    font-size: 18px;
     color: #94a3b8;
-    margin-left: 6px;
-    font-weight: 500;
-    margin-bottom: 6px; /* Adjustment for flex-end alignment */
+    margin-left: 8px;
+    font-weight: 600;
   }
 
   .metric-desc {
     font-size: 12px;
     color: #94a3b8;
+    font-weight: 400;
   }
 
   .details-grid {
@@ -273,6 +345,8 @@
 
   .detail-card {
     flex: 1;
+    padding: 16px;
+    background-color: #ffffff;
   }
 
   .detail-card-left {
@@ -280,34 +354,43 @@
   }
 
   .detail-label {
-    font-size: 14px;
-    color: #64748b;
+    font-size: 12px;
+    font-weight: 600;
+    color: #94a3b8;
     margin-bottom: 8px;
+    text-transform: uppercase;
   }
 
   .detail-value-row {
     display: flex;
     flex-direction: row;
-    align-items: flex-end;
-    margin-bottom: 4px;
+    align-items: baseline;
+    margin-bottom: 6px;
   }
 
   .detail-value {
-    font-size: 24px;
-    font-weight: 600;
-    color: #334155;
+    font-size: 28px;
+    font-weight: 700;
+    color: #1e293b;
   }
 
   .detail-unit {
     font-size: 12px;
     color: #94a3b8;
     margin-left: 4px;
-    margin-bottom: 4px; /* Adjustment for flex-end alignment */
+    font-weight: 500;
+  }
+
+  .detail-footer {
+    border-top-width: 1px;
+    border-top-color: #f8fafc;
+    padding-top: 4px;
   }
 
   .detail-desc {
-    font-size: 12px;
+    font-size: 10px;
     color: #cbd5e1;
+    font-weight: 500;
   }
 
   .action-bar {

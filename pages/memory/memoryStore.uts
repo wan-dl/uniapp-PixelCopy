@@ -5,12 +5,14 @@ export type MemoryObj = {
   TotalPss : string;
   TotalPrivateDirty : string;
   TotalSharedDirty : string;
+  updateTime : string;
 };
 
 export const globalMemoryData = ref<MemoryObj>({
   TotalPss: '0',
   TotalPrivateDirty: '0',
-  TotalSharedDirty: '0'
+  TotalSharedDirty: '0',
+  updateTime: '--/-- --:--:--'
 });
 
 export const globalHistoryData = ref<number[]>([]);
@@ -22,10 +24,19 @@ export function fetchMemoryData() {
   const pssStr = data["TotalPss"] as string;
   const pssNum = parseFloat(pssStr);
 
+  const now = new Date();
+  const month = (now.getMonth() + 1).toString().padStart(2, '0');
+  const day = now.getDate().toString().padStart(2, '0');
+  const hours = now.getHours().toString().padStart(2, '0');
+  const minutes = now.getMinutes().toString().padStart(2, '0');
+  const seconds = now.getSeconds().toString().padStart(2, '0');
+  const timeStr = month + '-' + day + ' ' + hours + ':' + minutes + ':' + seconds;
+
   const newData = {
     TotalPss: pssStr,
     TotalPrivateDirty: data["TotalPrivateDirty"] as string,
-    TotalSharedDirty: data["TotalSharedDirty"] as string
+    TotalSharedDirty: data["TotalSharedDirty"] as string,
+    updateTime: timeStr
   } as MemoryObj;
 
   globalMemoryData.value = newData;
@@ -68,7 +79,8 @@ if (cached != null && cached != "") {
     globalMemoryData.value = {
       TotalPss: (cachedObj["TotalPss"] != null) ? (cachedObj["TotalPss"] as string) : '0',
       TotalPrivateDirty: (cachedObj["TotalPrivateDirty"] != null) ? (cachedObj["TotalPrivateDirty"] as string) : '0',
-      TotalSharedDirty: (cachedObj["TotalSharedDirty"] != null) ? (cachedObj["TotalSharedDirty"] as string) : '0'
+      TotalSharedDirty: (cachedObj["TotalSharedDirty"] != null) ? (cachedObj["TotalSharedDirty"] as string) : '0',
+      updateTime: (cachedObj["updateTime"] != null) ? (cachedObj["updateTime"] as string) : '--/-- --:--:--'
     } as MemoryObj;
   }
 }
