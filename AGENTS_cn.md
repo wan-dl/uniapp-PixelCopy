@@ -16,7 +16,7 @@
 ## 3. 已解决的陷阱与编码规范 (关键)
 
 ### 3.1 UTS 语法约束
-- **无匿名内部类**: UTS 不支持 Java/Kotlin 中常见的 `new Interface() { ... }` 语法。 
+- **无匿名内部类**: UTS 不支持 Java/Kotlin 中常见的 `new Interface() { ... }` 语法。
   - *修复*: 始终使用 **Lambda 表达式** `() => { ... }` 或 `(param) => { ... }`。
 - **类型严格性**: 在与 Kotlin 的互操作性方面，UTS 比标准 TypeScript 更严格。
   - 对于来自原生回调的 lambda 参数，请使用 `MutableList<T>` 而不是 `ArrayList<T>`。
@@ -25,6 +25,7 @@
 - **隐式布尔转换**: UTS 不支持在模板中对字符串进行隐式的真/假值判断。
   - *错误*: `v-if="!errorMsg"`
   - *正确*: `v-if="errorMsg == ''"`
+- **页面生命周期**: 在 `<script setup>` 中，页面生命周期函数（如 `onShow`, `onLoad` 等）是全局可用的，**不需要**从 `@dcloudio/uni-app` 手动导入。
 
 ### 3.2 安卓原生互操作
 - **主线程执行器**: 不要将 `UTSAndroid.getDispatcher('main')` 转换为 `Executor`。
@@ -82,3 +83,7 @@
 ## 5. 部署与调试
 - **Logcat**: 使用 `npm run logcat:app-android` 查看编译错误和运行时日志。
 - **标准基座限制**: 标准的 HBuilderX 运行环境无法加载原生模块。务必使用自定义基座。
+
+## 6. 流程
+
+- 所有的uts文件、uvue文件修改后，都需要获取项目编译日志，如果存在错误，则进行修复，直到编译成功。

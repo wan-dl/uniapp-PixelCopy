@@ -1,86 +1,103 @@
-import { getAppMemory } from '@/uni_modules/app-performance-memory';
+import { getAppMemory, getRunningAppProcesses, getInstalledPackages } from '@/uni_modules/app-performance-memory';
 import { ref } from 'vue';
 
 export type MemoryObj = {
-  TotalPss : string;
-  TotalPrivateDirty : string;
-  TotalSharedDirty : string;
-  updateTime : string;
+    TotalPss : string;
+    TotalPrivateDirty : string;
+    TotalSharedDirty : string;
+    updateTime : string;
 };
 
 export const globalMemoryData = ref<MemoryObj>({
-  TotalPss: '0',
-  TotalPrivateDirty: '0',
-  TotalSharedDirty: '0',
-  updateTime: '--/-- --:--:--'
+    TotalPss: '0',
+    TotalPrivateDirty: '0',
+    TotalSharedDirty: '0',
+    updateTime: '--/-- --:--:--'
 });
 
 export const globalHistoryData = ref<number[]>([]);
 export const globalIsMonitoring = ref(false);
+export const targetPackageName = ref('');
 let globalTimerId : number = 0;
 
+export function fetchRunningApps() : string[] {
+    return getRunningAppProcesses();
+}
+
+export function fetchInstalledApps() : string[] {
+    return getInstalledPackages();
+}
+
+export function updateTargetPackage(name : string) {
+    targetPackageName.value = name;
+    // Reset history when package changes
+    globalHistoryData.value = [];
+    fetchMemoryData();
+}
+
 export function fetchMemoryData() {
-  let data = getAppMemory() as UTSJSONObject;
-  const pssStr = data["TotalPss"] as string;
-  const pssNum = parseFloat(pssStr);
+    // Fetch memory data
+    let data = getAppMemory(targetPackageName.value) as UTSJSONObject;
+    const pssStr = data["TotalPss"] as string;
+    const pssNum = parseFloat(pssStr);
 
-  const now = new Date();
-  const month = (now.getMonth() + 1).toString().padStart(2, '0');
-  const day = now.getDate().toString().padStart(2, '0');
-  const hours = now.getHours().toString().padStart(2, '0');
-  const minutes = now.getMinutes().toString().padStart(2, '0');
-  const seconds = now.getSeconds().toString().padStart(2, '0');
-  const timeStr = month + '-' + day + ' ' + hours + ':' + minutes + ':' + seconds;
+    const now = new Date();
+    const month = (now.getMonth() + 1).toString().padStart(2, '0');
+    const day = now.getDate().toString().padStart(2, '0');
+    const hours = now.getHours().toString().padStart(2, '0');
+    const minutes = now.getMinutes().toString().padStart(2, '0');
+    const seconds = now.getSeconds().toString().padStart(2, '0');
+    const timeStr = month + '-' + day + ' ' + hours + ':' + minutes + ':' + seconds;
 
-  const newData = {
-    TotalPss: pssStr,
-    TotalPrivateDirty: data["TotalPrivateDirty"] as string,
-    TotalSharedDirty: data["TotalSharedDirty"] as string,
-    updateTime: timeStr
-  } as MemoryObj;
+    const newData = {
+        TotalPss: pssStr,
+        TotalPrivateDirty: data["TotalPrivateDirty"] as string,
+        TotalSharedDirty: data["TotalSharedDirty"] as string,
+        updateTime: timeStr
+    } as MemoryObj;
 
-  globalMemoryData.value = newData;
+    globalMemoryData.value = newData;
 
-  // Add to history
-  if (!isNaN(pssNum)) {
-    globalHistoryData.value.push(pssNum);
-  }
+    // Add to history
+    if (!isNaN(pssNum)) {
+        globalHistoryData.value.push(pssNum);
+    }
 
-  uni.setStorageSync('memory_cache_data', newData);
+    uni.setStorageSync('memory_cache_data', newData);
 }
 
 export function toggleGlobalMonitoring() {
-  if (globalIsMonitoring.value) {
-    if (globalTimerId != 0) {
-      clearInterval(globalTimerId);
-      globalTimerId = 0;
+    if (globalIsMonitoring.value) {
+        if (globalTimerId != 0) {
+            clearInterval(globalTimerId);
+            globalTimerId = 0;
+        }
+        globalIsMonitoring.value = false;
+    } else {
+        globalIsMonitoring.value = true;
+        fetchMemoryData();
+        globalTimerId = setInterval(() => {
+            fetchMemoryData();
+        }, 1000);
     }
-    globalIsMonitoring.value = false;
-  } else {
-    globalIsMonitoring.value = true;
-    fetchMemoryData();
-    globalTimerId = setInterval(() => {
-      fetchMemoryData();
-    }, 1000);
-  }
 }
 
 // Initialization
 const cached = uni.getStorageSync('memory_cache_data');
 if (cached != null && cached != "") {
-  let cachedObj : UTSJSONObject | null = null;
-  if (typeof cached == 'string') {
-    cachedObj = JSON.parse(cached as string) as UTSJSONObject;
-  } else {
-    cachedObj = cached as UTSJSONObject;
-  }
+    let cachedObj : UTSJSONObject | null = null;
+    if (typeof cached == 'string') {
+        cachedObj = JSON.parse(cached as string) as UTSJSONObject;
+    } else {
+        cachedObj = cached as UTSJSONObject;
+    }
 
-  if (cachedObj != null) {
-    globalMemoryData.value = {
-      TotalPss: (cachedObj["TotalPss"] != null) ? (cachedObj["TotalPss"] as string) : '0',
-      TotalPrivateDirty: (cachedObj["TotalPrivateDirty"] != null) ? (cachedObj["TotalPrivateDirty"] as string) : '0',
-      TotalSharedDirty: (cachedObj["TotalSharedDirty"] != null) ? (cachedObj["TotalSharedDirty"] as string) : '0',
-      updateTime: (cachedObj["updateTime"] != null) ? (cachedObj["updateTime"] as string) : '--/-- --:--:--'
-    } as MemoryObj;
-  }
+    if (cachedObj != null) {
+        globalMemoryData.value = {
+            TotalPss: (cachedObj["TotalPss"] != null) ? (cachedObj["TotalPss"] as string) : '0',
+            TotalPrivateDirty: (cachedObj["TotalPrivateDirty"] != null) ? (cachedObj["TotalPrivateDirty"] as string) : '0',
+            TotalSharedDirty: (cachedObj["TotalSharedDirty"] != null) ? (cachedObj["TotalSharedDirty"] as string) : '0',
+            updateTime: (cachedObj["updateTime"] != null) ? (cachedObj["updateTime"] as string) : '--/-- --:--:--'
+        } as MemoryObj;
+    }
 }

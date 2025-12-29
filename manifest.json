@@ -53,7 +53,8 @@
 				"default": {}
 			},
 			"permissions": [
-				"<uses-feature android:name=\"android.hardware.camera\"/>"
+				"<uses-feature android:name=\"android.hardware.camera\"/>",
+				"<uses-feature android:name=\"android.hardware.QUERY_ALL_PACKAGES\"/>"
 			]
 		}
 	},

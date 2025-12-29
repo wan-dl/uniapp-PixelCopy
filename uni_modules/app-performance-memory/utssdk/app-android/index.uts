@@ -1,45 +1,165 @@
-import { getMemory } from '../interface.uts'
+import {
+	getMemory,
+	getRunningApps,
+	getInstalledApps
+} from '../interface.uts'
 
 import Process from 'android.os.Process';
 import Context from 'android.content.Context';
+import PackageManager from 'android.content.pm.PackageManager';
+import ApplicationInfo from 'android.content.pm.ApplicationInfo';
+import Build from 'android.os.Build';
+import UsageStatsManager from 'android.app.usage.UsageStatsManager';
+import System from 'java.lang.System';
 // import * as Fragment from 'androidx.fragment.app.Fragment'
 
 import ActivityManager from "android.app.ActivityManager"
 
-export const getAppMemory : getMemory = function () : UTSJSONObject {
-
-    let result : UTSJSONObject = {
-        "TotalPss": 0,
-        "TotalPrivateDirty": 0,
-        "TotalSharedDirty": 0
-    }
-
-    // 获取系统的 ActivityManager 服务
-    // const activityManager= requireContext().getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager;
-    const activityManager = UTSAndroid.getAppContext()!.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager;
-
-    // 获取当前进程的 PID（进程 ID）
-    // const pidArray = new IntArray([Process.myPid()]);
-    const pidArray = [Process.myPid()].toKotlinList().toIntArray();
-    const memoryInfoArray = activityManager.getProcessMemoryInfo(pidArray);
-
-    // 获取当前进程的内存信息
-    const memoryInfo = memoryInfoArray[0];
-
-    // 获取总的 PSS（Proportional Set Size），并将其从 KB 转换为 MB
-    const totalPss = (memoryInfo.getTotalPss().toFloat() / 1024).toFixed(2);
-    result["TotalPss"] = totalPss;
-
-    // 获取总的私有脏页内存，并将其从 KB 转换为 MB
-    const totalPrivateDirty = (memoryInfo.getTotalPrivateDirty().toFloat() / 1024).toFixed(2);
-    result["TotalPrivateDirty"] = totalPrivateDirty;
-
-    // 获取总的共享脏页内存，并将其从 KB 转换为 MB
-    const totalSharedDirty = (memoryInfo.getTotalSharedDirty().toFloat() / 1024).toFixed(2);
-    result["TotalSharedDirty"] = totalSharedDirty;
-
-    // console.log(result)
-    // 返回包含内存使用信息的字符串
-    // return `Total PSS: ${totalPss}MB\nTotal Private Dirty: ${totalPrivateDirty}MB\nTotal Shared Dirty: ${totalSharedDirty}MB`;
-    return result;
+export const getInstalledPackages: getInstalledApps = function(): string[] {
+	const list: string[] = [];
+	const context = UTSAndroid.getAppContext();
+	if (context != null) {
+		const pm = context.packageManager;
+		const packages = pm.getInstalledPackages(0);
+		for (let i = 0; i < packages.size; i++) {
+			const info = packages.get(i.toInt());
+			const appInfo = info.applicationInfo;
+			if (appInfo != null) {
+				// 排除系统应用和系统更新应用，确保只显示用户安装的应用
+				const isSystem = (appInfo.flags & ApplicationInfo.FLAG_SYSTEM) != 0;
+				const isUpdatedSystem = (appInfo.flags & ApplicationInfo.FLAG_UPDATED_SYSTEM_APP) != 0;
+				if (!isSystem && !isUpdatedSystem) {
+					list.push(info.packageName);
+				}
+			}
+		}
+	}
+	// 对包名进行字母排序
+	list.sort();
+	return list;
 }
+
+export const getRunningAppProcesses: getRunningApps = function(): string[] {
+	const context = UTSAndroid.getAppContext() !;
+	const activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager;
+	const runningAppSet = new Set < string > ();
+
+	// The getRunningAppProcesses method is deprecated and returns a limited list on newer Android versions.
+	// We'll use it as a base.
+	const runningApps = activityManager.runningAppProcesses;
+	if (runningApps != null) {
+		for (let i = 0; i < runningApps.size; i++) {
+			const info = runningApps.get(i.toInt());
+			// A process can be associated with multiple packages, so we add all of them.
+			if (info.pkgList != null) {
+				for (let j = 0; j < info.pkgList.size; j++) {
+					runningAppSet.add(info.pkgList.get(j.toInt()));
+				}
+			}
+		}
+	}
+
+	// On Android L (API 21) and above, UsageStatsManager can provide more info,
+	// but it requires a special permission from the user.
+	if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+		try {
+			const usageStatsManager = context.getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager;
+			const endTime = System.currentTimeMillis();
+			// Look at apps used in the last minute. This is a heuristic for "running".
+			const beginTime = endTime - 60000;
+
+			const queryResults = usageStatsManager.queryUsageStats(UsageStatsManager.INTERVAL_DAILY, beginTime,
+				endTime);
+
+			if (queryResults != null) {
+				for (let i = 0; i < queryResults.size; i++) {
+					const stats = queryResults.get(i.toInt());
+					if (stats.getLastTimeUsed() >= beginTime) {
+						runningAppSet.add(stats.getPackageName());
+					}
+				}
+			}
+		} catch (e) {
+			console.error("Failed to query usage stats. This may be due to lack of 'USAGE_STATS' permission. " +
+				e);
+		}
+	}
+
+	const list: string[] = [];
+	runningAppSet.forEach((item) => {
+		list.push(item)
+	});
+	list.sort();
+	return list;
+}
+
+export const getAppMemory: getMemory = function(packageName ?: string): UTSJSONObject {
+	let result: UTSJSONObject = {
+		"TotalPss": "0",
+		"TotalPrivateDirty": "0",
+		"TotalSharedDirty": "0"
+	}
+
+	// 获取系统的 ActivityManager 服务
+	// const activityManager= requireContext().getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager;
+	// Force recompile
+	const activityManager = UTSAndroid.getAppContext() !.getSystemService(Context.ACTIVITY_SERVICE) as
+		ActivityManager;
+
+	let targetPid = Process.myPid();
+	console.log("[targetPid] =", targetPid);
+
+	if (packageName != null && packageName != "") {
+		let found = false;
+		const runningApps = activityManager.runningAppProcesses;
+		console.log("runningApps = ", runningApps)
+		if (runningApps != null) {
+			for (let i = 0; i < runningApps.size; i++) {
+				const info = runningApps.get(i.toInt());
+				if (info.pkgList != null) {
+					for (let j = 0; j < info.pkgList.size; j++) {
+						if (info.pkgList.get(j.toInt()) == packageName) {
+							targetPid = info.pid;
+							found = true;
+							break;
+						}
+					}
+				}
+				if (found) {
+					break;
+				}
+			}
+		}
+
+		if (!found) {
+			// 如果指定了包名但未找到对应进程，返回 0
+			return result;
+		}
+	}
+
+	// 获取进程的 PID（进程 ID）
+	// const pidArray = new IntArray([Process.myPid()]);
+	const pidArray = [targetPid].toKotlinList().toIntArray();
+	const memoryInfoArray = activityManager.getProcessMemoryInfo(pidArray);
+
+	if (memoryInfoArray != null && memoryInfoArray.size > 0) {
+		// 获取当前进程的内存信息
+		const memoryInfo = memoryInfoArray[0];
+
+		// 获取总的 PSS（Proportional Set Size），并将其从 KB 转换为 MB
+		const totalPss = (memoryInfo.getTotalPss().toFloat() / 1024).toFixed(2);
+		result["TotalPss"] = totalPss;
+
+		// 获取总的私有脏页内存，并将其从 KB 转换为 MB
+		const totalPrivateDirty = (memoryInfo.getTotalPrivateDirty().toFloat() / 1024).toFixed(2);
+		result["TotalPrivateDirty"] = totalPrivateDirty;
+
+		// 获取总的共享脏页内存，并将其从 KB 转换为 MB
+		const totalSharedDirty = (memoryInfo.getTotalSharedDirty().toFloat() / 1024).toFixed(2);
+		result["TotalSharedDirty"] = totalSharedDirty;
+	}
+
+	return result;
+}
+
+

@@ -13,6 +13,12 @@
 			}
 		},
 		{
+			"path": "pages/memory/app-list",
+			"style": {
+				"navigationBarTitleText": "选择应用"
+			}
+		},
+		{
 			"path": "pages/screenshot/screenshot",
 			"style": {
 				"navigationBarTitleText": "截图功能"

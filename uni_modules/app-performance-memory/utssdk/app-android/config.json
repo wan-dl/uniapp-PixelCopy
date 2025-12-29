@@ -1,3 +1,8 @@
 {
-  "minSdkVersion": "19"
+  "minSdkVersion": "19",
+  "permissions": [
+    "android.permission.QUERY_ALL_PACKAGES",
+    "android.permission.GET_TASKS",
+    "android.permission.PACKAGE_USAGE_STATS"
+  ]
 }

@@ -1,9 +1,16 @@
-import { getMemory } from '../interface.uts';
+import { getMemory, getRunningApps } from '../interface.uts';
 
 import { hidebug } from '@kit.PerformanceAnalysisKit';
 
+export const getRunningAppProcesses : getRunningApps = function () : string[] {
+    return [];
+}
 
-export const getAppMemory : getMemory = function () : UTSJSONObject {
+export const getInstalledPackages : getInstalledApps = function () : string[] {
+    return [];
+}
+
+export const getAppMemory : getMemory = function (packageName?: string) : UTSJSONObject {
     let result  = new UTSJSONObject({
         "TotalPss": 0
     });

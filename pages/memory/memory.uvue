@@ -1,439 +1,531 @@
 <template>
-  <view class="page-container">
+    <view class="page-container">
 
-    <scroll-view class="content-area" scroll-y="true">
-      <!-- Main Metric Card -->
-      <view class="metric-card main-card">
-        <view class="main-card-header">
-          <text class="metric-label">App 总内存 (PSS)</text>
-          <view class="time-tag">
-            <text class="time-tag-text">更新于 {{ globalMemoryData.updateTime }}</text>
-          </view>
-        </view>
-        <view class="metric-value-container">
-          <text class="metric-value">{{ globalMemoryData.TotalPss }}</text>
-          <text class="metric-unit">MB</text>
-        </view>
-        <view class="status-indicator">
-          <view class="dot" :class="globalIsMonitoring ? 'dot-active' : ''"></view>
-          <text class="metric-desc">{{ globalIsMonitoring ? '持续监控中' : '静态采样数据' }}</text>
-        </view>
-      </view>
+        <scroll-view class="content-area" scroll-y="true">
 
-      <!-- Chart Card -->
-      <view class="metric-card chart-card">
-        <view class="card-inner-header">
-          <view class="title-with-icon">
-            <text class="card-inner-title">内存波动趋势</text>
-          </view>
-          <text class="data-count-text">采样点: {{ globalHistoryData.length }}</text>
-        </view>
-        <canvas id="memoryChart" canvas-id="memoryChart" class="memory-canvas"></canvas>
-      </view>
+            <!-- Package Name Input -->
+            <view class="input-card">
+                <text class="input-label">目标应用包名</text>
+                <view class="input-wrapper" @click="showPackageList">
+                    <text class="input-text">{{ targetPackageName == '' ? '当前应用' : targetPackageName }}</text>
+                    <text class="input-icon">▼</text>
+                </view>
+            </view>
 
-      <!-- Detailed Metrics Grid -->
-      <view class="details-grid">
-        <view class="metric-card detail-card detail-card-left">
-          <text class="detail-label">私有内存</text>
-          <view class="detail-value-row">
-            <text class="detail-value">{{ globalMemoryData.TotalPrivateDirty != '' ? globalMemoryData.TotalPrivateDirty : '0' }}</text>
-            <text class="detail-unit">MB</text>
-          </view>
-          <view class="detail-footer">
-            <text class="detail-desc">Private Dirty</text>
-          </view>
-        </view>
-        <view class="metric-card detail-card">
-          <text class="detail-label">共享内存</text>
-          <view class="detail-value-row">
-            <text class="detail-value">{{ globalMemoryData.TotalSharedDirty != '' ? globalMemoryData.TotalSharedDirty : '0' }}</text>
-            <text class="detail-unit">MB</text>
-          </view>
-          <view class="detail-footer">
-            <text class="detail-desc">Shared Dirty</text>
-          </view>
-        </view>
-      </view>
-    </scroll-view>
+            <!-- Main Metric Card -->
+            <view class="metric-card main-card">
+                <view class="main-card-header">
+                    <text class="metric-label">App 总内存 (PSS)</text>
+                    <view class="time-tag">
+                        <text class="time-tag-text">更新于 {{ globalMemoryData.updateTime }}</text>
+                    </view>
+                </view>
+                <view class="metric-value-container">
+                    <text class="metric-value">{{ globalMemoryData.TotalPss }}</text>
+                    <text class="metric-unit">MB</text>
+                </view>
+                <view class="status-indicator">
+                    <view class="dot" :class="globalIsMonitoring ? 'dot-active' : ''"></view>
+                    <text class="metric-desc">{{ globalIsMonitoring ? '持续监控中' : '静态采样数据' }}</text>
+                </view>
+            </view>
 
-    <!-- Bottom Action -->
-    <view class="action-bar">
-      <button class="btn btn-secondary flex-1 margin-right-sm" hover-class="btn-hover" @click="handleRefresh">
-        单次刷新
-      </button>
-      <button
-        class="btn flex-1"
-        :class="globalIsMonitoring ? 'btn-danger' : 'btn-primary'"
-        hover-class="btn-hover"
-        @click="handleToggle"
-      >
-        {{ globalIsMonitoring ? '停止监控' : '持续监控' }}
-      </button>
+            <!-- Chart Card -->
+            <view class="metric-card chart-card">
+                <view class="card-inner-header">
+                    <view class="title-with-icon">
+                        <text class="card-inner-title">内存波动趋势</text>
+                    </view>
+                    <text class="data-count-text">采样点: {{ globalHistoryData.length }}</text>
+                </view>
+                <canvas id="memoryChart" canvas-id="memoryChart" class="memory-canvas"></canvas>
+            </view>
+
+            <!-- Detailed Metrics Grid -->
+            <view class="details-grid">
+                <view class="metric-card detail-card detail-card-left">
+                    <text class="detail-label">私有内存</text>
+                    <view class="detail-value-row">
+                        <text
+                            class="detail-value">{{ globalMemoryData.TotalPrivateDirty != '' ? globalMemoryData.TotalPrivateDirty : '0' }}</text>
+                        <text class="detail-unit">MB</text>
+                    </view>
+                    <view class="detail-footer">
+                        <text class="detail-desc">Private Dirty</text>
+                    </view>
+                </view>
+                <view class="metric-card detail-card">
+                    <text class="detail-label">共享内存</text>
+                    <view class="detail-value-row">
+                        <text
+                            class="detail-value">{{ globalMemoryData.TotalSharedDirty != '' ? globalMemoryData.TotalSharedDirty : '0' }}</text>
+                        <text class="detail-unit">MB</text>
+                    </view>
+                    <view class="detail-footer">
+                        <text class="detail-desc">Shared Dirty</text>
+                    </view>
+                </view>
+            </view>
+        </scroll-view>
+
+        <!-- Bottom Action -->
+        <view class="action-bar">
+            <button class="btn btn-secondary flex-1 margin-right-sm" hover-class="btn-hover" @click="handleRefresh">
+                单次刷新
+            </button>
+            <button class="btn flex-1" :class="globalIsMonitoring ? 'btn-danger' : 'btn-primary'"
+                hover-class="btn-hover" @click="handleToggle">
+                {{ globalIsMonitoring ? '停止监控' : '持续监控' }}
+            </button>
+        </view>
     </view>
-  </view>
 </template>
 
 <script setup lang="uts">
-  import { globalMemoryData, globalHistoryData, globalIsMonitoring, fetchMemoryData, toggleGlobalMonitoring } from './memoryStore.uts';
-  import { onMounted, watch } from 'vue';
-  import { onShow } from '@dcloudio/uni-app';
+    import { globalMemoryData, globalHistoryData, globalIsMonitoring, fetchMemoryData, toggleGlobalMonitoring, updateTargetPackage, targetPackageName, fetchRunningApps, fetchInstalledApps } from './memoryStore.uts';
+    import { onMounted, watch } from 'vue';
 
-  function handleRefresh() {
-    fetchMemoryData();
-  }
-
-  function handleToggle() {
-    toggleGlobalMonitoring();
-  }
-
-  function drawChart() {
-    const canvas = uni.getElementById('memoryChart') as UniCanvasElement | null;
-    if (canvas == null) return;
-    const ctx = canvas.getContext('2d');
-    if (ctx == null) return;
-
-    const dataList = globalHistoryData.value;
-    if (dataList.length < 2) return;
-
-    const width = canvas.width;
-    const height = canvas.height;
-    const padding = 20.0;
-
-    const chartWidth = width - padding * 2.0;
-    const chartHeight = height - padding * 2.0;
-
-    let maxVal = 0.0;
-    let minVal = 1000000.0;
-    for (let i = 0; i < dataList.length; i++) {
-      const val = dataList[i];
-      if (val > maxVal) maxVal = val;
-      if (val < minVal) minVal = val;
+    function handleRefresh() {
+        fetchMemoryData();
     }
 
-    maxVal = maxVal * 1.1;
-    minVal = minVal * 0.9;
-
-    const range = maxVal - minVal;
-    const safeRange = range > 0 ? range : 1.0;
-
-    ctx.clearRect(0, 0, width, height);
-
-    ctx.strokeStyle = '#f1f5f9';
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    for (let i = 0; i <= 4; i++) {
-      const y = padding + (chartHeight / 4.0) * i;
-      ctx.moveTo(padding, y);
-      ctx.lineTo(width - padding, y);
+    function handleToggle() {
+        toggleGlobalMonitoring();
     }
-    ctx.stroke();
 
-    ctx.beginPath();
-    ctx.strokeStyle = '#6366f1';
-    ctx.lineWidth = 2;
-    ctx.lineJoin = 'round';
+    function showSelectionSheet(options : string[], title : string) {
+        if (options.length == 0) {
+            uni.showToast({ title: '列表为空', icon: 'none' });
+            return;
+        }
 
-    for (let i = 0; i < dataList.length; i++) {
-      const val = dataList[i];
-      const x = padding + (chartWidth / 29.0) * i;
-      const y = height - padding - ((val - minVal) / safeRange) * chartHeight;
+        // uni.showActionSheet has a limit of 6 items on some platforms,
+        // but on Android it usually shows a list.
+        // For very long lists, we use a custom picker or just the first 50.
+        const displayOptions = options.length > 50 ? options.slice(0, 50) : options;
 
-      if (i == 0) {
-        ctx.moveTo(x, y);
-      } else {
-        ctx.lineTo(x, y);
-      }
+        uni.showActionSheet({
+            itemList: displayOptions,
+            title: title + (options.length > 50 ? ' (仅显示前50个)' : ''),
+            success: (res) => {
+                updateTargetPackage(displayOptions[res.tapIndex]);
+            }
+        });
     }
-    ctx.stroke();
 
-    ctx.lineTo(padding + (chartWidth / 29.0) * (dataList.length - 1), height - padding);
-    ctx.lineTo(padding, height - padding);
-    ctx.fillStyle = 'rgba(99, 102, 241, 0.1)';
-    ctx.fill();
-  }
+    function showPackageList() {
+        uni.showActionSheet({
+            itemList: ['当前应用', '手动输入包名', '所有已安装应用'],
+            success: (res) => {
+                if (res.tapIndex == 0) {
+                    updateTargetPackage('');
+                } else if (res.tapIndex == 1) {
+                    uni.showModal({
+                        title: '输入包名',
+                        placeholderText: '请输入完整的包名',
+                        editable: true,
+                        success: (modalRes) => {
+                            if (modalRes.confirm && modalRes.content != null) {
+                                updateTargetPackage(modalRes.content!);
+                            }
+                        }
+                    });
+                } else if (res.tapIndex == 2) {
+                    uni.navigateTo({
+                        url: '/pages/memory/app-list'
+                    });
+                }
+            }
+        });
+    }
 
-  // Watch for data changes to update chart
-  watch(():number => { return globalHistoryData.value.length }, () => {
-    drawChart();
-  });
+    function drawChart() {
+        const canvas = uni.getElementById('memoryChart') as UniCanvasElement | null;
+        if (canvas == null) return;
+        const ctx = canvas.getContext('2d');
+        if (ctx == null) return;
 
-  onMounted(() => {
-    drawChart();
-  });
+        const dataList = globalHistoryData.value;
+        if (dataList.length < 2) return;
 
-  onShow(() => {
-    setTimeout(() => {
-      drawChart();
-    }, 200);
-  });
+        const width = canvas.width;
+        const height = canvas.height;
+        const padding = 20.0;
+
+        const chartWidth = width - padding * 2.0;
+        const chartHeight = height - padding * 2.0;
+
+        let maxVal = 0.0;
+        let minVal = 1000000.0;
+        for (let i = 0; i < dataList.length; i++) {
+            const val = dataList[i];
+            if (val > maxVal) maxVal = val;
+            if (val < minVal) minVal = val;
+        }
+
+        maxVal = maxVal * 1.1;
+        minVal = minVal * 0.9;
+
+        const range = maxVal - minVal;
+        const safeRange = range > 0 ? range : 1.0;
+
+        ctx.clearRect(0, 0, width, height);
+
+        ctx.strokeStyle = '#f1f5f9';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        for (let i = 0; i <= 4; i++) {
+            const y = padding + (chartHeight / 4.0) * i;
+            ctx.moveTo(padding, y);
+            ctx.lineTo(width - padding, y);
+        }
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.strokeStyle = '#6366f1';
+        ctx.lineWidth = 2;
+        ctx.lineJoin = 'round';
+
+        for (let i = 0; i < dataList.length; i++) {
+            const val = dataList[i];
+            const x = padding + (chartWidth / 29.0) * i;
+            const y = height - padding - ((val - minVal) / safeRange) * chartHeight;
+
+            if (i == 0) {
+                ctx.moveTo(x, y);
+            } else {
+                ctx.lineTo(x, y);
+            }
+        }
+        ctx.stroke();
+
+        ctx.lineTo(padding + (chartWidth / 29.0) * (dataList.length - 1), height - padding);
+        ctx.lineTo(padding, height - padding);
+        ctx.fillStyle = 'rgba(99, 102, 241, 0.1)';
+        ctx.fill();
+    }
+
+    // Watch for data changes to update chart
+    watch(() : number => { return globalHistoryData.value.length }, () => {
+        drawChart();
+    });
+
+    onMounted(() => {
+        drawChart();
+    });
+
+    onShow(() => {
+        setTimeout(() => {
+            drawChart();
+        }, 200);
+    });
 </script>
 
 <style>
-  .page-container {
-    flex: 1;
-    background-color: #f8fafc;
-    display: flex;
-    flex-direction: column;
-  }
+    .page-container {
+        flex: 1;
+        background-color: #f8fafc;
+        display: flex;
+        flex-direction: column;
+    }
 
-  .nav-bar {
-    height: 44px;
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: center;
-    background-color: #ffffff;
-    border-bottom-width: 1px;
-    border-bottom-color: #e2e8f0;
-    padding-top: 20px;
-    padding-bottom: 10px;
-  }
+    .nav-bar {
+        height: 44px;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: center;
+        background-color: #ffffff;
+        border-bottom-width: 1px;
+        border-bottom-color: #e2e8f0;
+        padding-top: 20px;
+        padding-bottom: 10px;
+    }
 
-  .nav-title {
-    font-size: 18px;
-    font-weight: 600;
-    color: #0f172a;
-  }
+    .nav-title {
+        font-size: 18px;
+        font-weight: 600;
+        color: #0f172a;
+    }
 
-  .content-area {
-    flex: 1;
-    padding: 24px;
-  }
+    .content-area {
+        flex: 1;
+        padding: 24px;
+    }
 
-  .metric-card {
-    background-color: #ffffff;
-    border-radius: 16px;
-    padding: 20px;
-    border-width: 1px;
-    border-color: #e2e8f0;
-    display: flex;
-    flex-direction: column;
-    margin-bottom: 20px;
-  }
+    .input-card {
+        background-color: #ffffff;
+        border-radius: 12px;
+        padding: 16px;
+        margin-bottom: 20px;
+        border-width: 1px;
+        border-color: #e2e8f0;
+    }
 
-  .main-card {
-    align-items: center;
-    justify-content: center;
-    padding: 32px 20px;
-    background: linear-gradient(to bottom right, #ffffff, #f1f5f9);
-    border-color: #e2e8f0;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-  }
+    .input-label {
+        font-size: 12px;
+        color: #64748b;
+        margin-bottom: 8px;
+        font-weight: 500;
+    }
 
-  .main-card-header {
-    width: 100%;
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-  }
+    .input-wrapper {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+        background-color: #f8fafc;
+        padding: 10px 12px;
+        border-radius: 8px;
+        border-width: 1px;
+        border-color: #f1f5f9;
+    }
 
-  .time-tag {
-    background-color: #f1f5f9;
-    padding: 4px 10px;
-    border-radius: 12px;
-  }
+    .input-text {
+        font-size: 14px;
+        color: #334155;
+        font-weight: 500;
+    }
 
-  .time-tag-text {
-    font-size: 11px;
-    color: #64748b;
-    font-weight: 500;
-  }
+    .input-icon {
+        font-size: 10px;
+        color: #94a3b8;
+    }
 
-  .status-indicator {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    margin-top: 12px;
-  }
+    .metric-card {
+        background-color: #ffffff;
+        border-radius: 16px;
+        padding: 20px;
+        border-width: 1px;
+        border-color: #e2e8f0;
+        display: flex;
+        flex-direction: column;
+        margin-bottom: 20px;
+    }
 
-  .dot {
-    width: 6px;
-    height: 6px;
-    border-radius: 3px;
-    background-color: #cbd5e1;
-    margin-right: 6px;
-  }
+    .main-card {
+        align-items: center;
+        justify-content: center;
+        padding: 32px 20px;
+        background: linear-gradient(to bottom right, #ffffff, #f1f5f9);
+        border-color: #e2e8f0;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    }
 
-  .dot-active {
-    background-color: #10b981;
-    box-shadow: 0 0 8px rgba(16, 185, 129, 0.5);
-  }
+    .main-card-header {
+        width: 100%;
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
 
-  .chart-card {
-    padding: 20px;
-    box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.03);
-  }
+    .time-tag {
+        background-color: #f1f5f9;
+        padding: 4px 10px;
+        border-radius: 12px;
+    }
 
-  .title-with-icon {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-  }
+    .time-tag-text {
+        font-size: 11px;
+        color: #64748b;
+        font-weight: 500;
+    }
 
-  .card-inner-header {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 16px;
-  }
+    .status-indicator {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        margin-top: 12px;
+    }
 
-  .card-inner-title {
-    font-size: 14px;
-    font-weight: 600;
-    color: #334155;
-  }
+    .dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 3px;
+        background-color: #cbd5e1;
+        margin-right: 6px;
+    }
 
-  .data-count-text {
-    font-size: 11px;
-    color: #64748b;
-    background-color: #f8fafc;
-    padding: 2px 8px;
-    border-radius: 8px;
-    border-width: 1px;
-    border-color: #f1f5f9;
-  }
+    .dot-active {
+        background-color: #10b981;
+        box-shadow: 0 0 8px rgba(16, 185, 129, 0.5);
+    }
 
-  .memory-canvas {
-    width: 100%;
-    height: 160px;
-    background-color: transparent;
-  }
+    .chart-card {
+        padding: 20px;
+        box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+    }
 
-  .metric-label {
-    font-size: 14px;
-    font-weight: 600;
-    color: #64748b;
-    letter-spacing: 0.5px;
-  }
+    .title-with-icon {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+    }
 
-  .metric-value-container {
-    display: flex;
-    flex-direction: row;
-    align-items: baseline;
-    margin-bottom: 4px;
-  }
+    .card-inner-header {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 16px;
+    }
 
-  .metric-value {
-    font-size: 56px;
-    font-weight: 800;
-    color: #4f46e5;
-    line-height: 1;
-    font-family: 'Courier New', Courier, monospace; /* Monospaced for numbers if possible */
-  }
+    .card-inner-title {
+        font-size: 14px;
+        font-weight: 600;
+        color: #334155;
+    }
 
-  .metric-unit {
-    font-size: 18px;
-    color: #94a3b8;
-    margin-left: 8px;
-    font-weight: 600;
-  }
+    .data-count-text {
+        font-size: 11px;
+        color: #64748b;
+        background-color: #f8fafc;
+        padding: 2px 8px;
+        border-radius: 8px;
+        border-width: 1px;
+        border-color: #f1f5f9;
+    }
 
-  .metric-desc {
-    font-size: 12px;
-    color: #94a3b8;
-    font-weight: 400;
-  }
+    .memory-canvas {
+        width: 100%;
+        height: 160px;
+        background-color: transparent;
+    }
 
-  .details-grid {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-  }
+    .metric-label {
+        font-size: 14px;
+        font-weight: 600;
+        color: #64748b;
+        letter-spacing: 0.5px;
+    }
 
-  .detail-card {
-    flex: 1;
-    padding: 16px;
-    background-color: #ffffff;
-  }
+    .metric-value-container {
+        display: flex;
+        flex-direction: row;
+        align-items: flex-end;
+        margin-bottom: 4px;
+    }
 
-  .detail-card-left {
-    margin-right: 16px;
-  }
+    .metric-value {
+        font-size: 56px;
+        font-weight: 700;
+        color: #4f46e5;
+        line-height: 1;
+        font-family: 'Courier New', Courier, monospace;
+        /* Monospaced for numbers if possible */
+    }
 
-  .detail-label {
-    font-size: 12px;
-    font-weight: 600;
-    color: #94a3b8;
-    margin-bottom: 8px;
-    text-transform: uppercase;
-  }
+    .metric-unit {
+        font-size: 18px;
+        color: #94a3b8;
+        margin-left: 8px;
+        font-weight: 600;
+    }
 
-  .detail-value-row {
-    display: flex;
-    flex-direction: row;
-    align-items: baseline;
-    margin-bottom: 6px;
-  }
+    .metric-desc {
+        font-size: 12px;
+        color: #94a3b8;
+        font-weight: 400;
+    }
 
-  .detail-value {
-    font-size: 28px;
-    font-weight: 700;
-    color: #1e293b;
-  }
+    .details-grid {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+    }
 
-  .detail-unit {
-    font-size: 12px;
-    color: #94a3b8;
-    margin-left: 4px;
-    font-weight: 500;
-  }
+    .detail-card {
+        flex: 1;
+        padding: 16px;
+        background-color: #ffffff;
+    }
 
-  .detail-footer {
-    border-top-width: 1px;
-    border-top-color: #f8fafc;
-    padding-top: 4px;
-  }
+    .detail-card-left {
+        margin-right: 16px;
+    }
 
-  .detail-desc {
-    font-size: 10px;
-    color: #cbd5e1;
-    font-weight: 500;
-  }
+    .detail-label {
+        font-size: 12px;
+        font-weight: 600;
+        color: #94a3b8;
+        margin-bottom: 8px;
+    }
 
-  .action-bar {
-    padding: 24px;
-    background-color: #ffffff;
-    border-top-width: 1px;
-    border-top-color: #e2e8f0;
-    padding-bottom: 40px;
-    display: flex;
-    flex-direction: row;
-  }
+    .detail-value-row {
+        display: flex;
+        flex-direction: row;
+        align-items: flex-end;
+        margin-bottom: 6px;
+    }
 
-  .btn {
-    height: 50px;
-    border-radius: 25px;
-  }
+    .detail-value {
+        font-size: 28px;
+        font-weight: 700;
+        color: #1e293b;
+    }
 
-  .btn-primary {
-    background-color: #6366f1;
-    color: #ffffff;
-  }
+    .detail-unit {
+        font-size: 12px;
+        color: #94a3b8;
+        margin-left: 4px;
+        font-weight: 500;
+    }
 
-  .btn-secondary {
-    background-color: #ffffff;
-    border-width: 1px;
-    border-color: #cbd5e1;
-    color: #64748b;
-  }
+    .detail-footer {
+        border-top-width: 1px;
+        border-top-color: #f8fafc;
+        padding-top: 4px;
+    }
 
-  .btn-danger {
-    background-color: #ef4444;
-    color: #ffffff;
-  }
+    .detail-desc {
+        font-size: 10px;
+        color: #cbd5e1;
+        font-weight: 500;
+    }
 
-  .btn-hover {
-    opacity: 0.8;
-  }
+    .action-bar {
+        padding: 24px;
+        background-color: #ffffff;
+        border-top-width: 1px;
+        border-top-color: #e2e8f0;
+        padding-bottom: 40px;
+        display: flex;
+        flex-direction: row;
+    }
 
-  .flex-1 {
-    flex: 1;
-  }
+    .btn {
+        height: 50px;
+        border-radius: 25px;
+    }
 
-  .margin-right-sm {
-    margin-right: 12px;
-  }
+    .btn-primary {
+        background-color: #6366f1;
+        color: #ffffff;
+    }
+
+    .btn-secondary {
+        background-color: #ffffff;
+        border-width: 1px;
+        border-color: #cbd5e1;
+        color: #64748b;
+    }
+
+    .btn-danger {
+        background-color: #ef4444;
+        color: #ffffff;
+    }
+
+    .btn-hover {
+        opacity: 0.8;
+    }
+
+    .flex-1 {
+        flex: 1;
+    }
+
+    .margin-right-sm {
+        margin-right: 12px;
+    }
 </style>

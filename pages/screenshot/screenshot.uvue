@@ -42,6 +42,7 @@
 </template>
 
 <script setup lang="uts">
+  import { ref } from 'vue';
   import { captureScreen } from '@/uni_modules/android-PixedCopy';
 
   let screenshotPath = ref<string>('');

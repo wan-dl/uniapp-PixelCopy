@@ -1,0 +1,150 @@
+<template>
+    <view class="page-container">
+        <!-- Search Box -->
+        <view class="search-header">
+            <view class="search-wrapper">
+                <text class="search-icon">🔍</text>
+                <input class="search-input" v-model="searchQuery" placeholder="搜索包名..." />
+                <text v-if="searchQuery.length > 0" class="clear-icon" @click="searchQuery = ''">✕</text>
+            </view>
+        </view>
+
+        <scroll-view class="content-area" scroll-y="true">
+            <view class="list-container">
+                <view class="list-item" v-for="(item, index) in filteredAppList" :key="index" @click="selectApp(item)"
+                    hover-class="list-item-hover">
+                    <text class="item-text">{{ item }}</text>
+                    <view class="item-arrow"></view>
+                </view>
+            </view>
+            <view v-if="filteredAppList.length == 0" class="empty-state">
+                <text class="empty-text">{{ fullAppList.length == 0 ? '正在加载...' : '未找到匹配的包名' }}</text>
+            </view>
+        </scroll-view>
+    </view>
+</template>
+
+<script setup lang="uts">
+    import { fetchInstalledApps, updateTargetPackage } from './memoryStore.uts';
+    import { ref, onMounted, computed } from 'vue';
+
+    const searchQuery = ref('');
+    const fullAppList = ref<string[]>([]);
+    
+    const filteredAppList = computed(() : string[] => {
+        const query = searchQuery.value.toLowerCase().trim();
+        if (query == '') {
+            return fullAppList.value;
+        }
+        return fullAppList.value.filter((pkg : string) : boolean => {
+            return pkg.toLowerCase().includes(query);
+        });
+    });
+
+    function selectApp(pkg : string) {
+        updateTargetPackage(pkg);
+        uni.navigateBack();
+    }
+
+    onMounted(() => {
+        // Fetch apps
+        const apps = fetchInstalledApps();
+        fullAppList.value = apps;
+    });
+</script>
+
+<style>
+    .page-container {
+        flex: 1;
+        background-color: #f8fafc;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .search-header {
+        background-color: #ffffff;
+        padding: 12px 16px;
+        border-bottom-width: 1px;
+        border-bottom-color: #e2e8f0;
+    }
+
+    .search-wrapper {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        background-color: #f1f5f9;
+        border-radius: 10px;
+        padding: 0 12px;
+        height: 40px;
+    }
+
+    .search-icon {
+        font-size: 14px;
+        color: #94a3b8;
+        margin-right: 8px;
+    }
+
+    .search-input {
+        flex: 1;
+        font-size: 14px;
+        color: #334155;
+        height: 40px;
+    }
+
+    .clear-icon {
+        font-size: 14px;
+        color: #94a3b8;
+        padding: 4px;
+        margin-left: 4px;
+    }
+
+    .content-area {
+        flex: 1;
+    }
+
+    .list-container {
+        padding: 16px;
+    }
+
+    .list-item {
+        background-color: #ffffff;
+        padding: 16px;
+        border-bottom-width: 1px;
+        border-bottom-color: #e2e8f0;
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+        border-radius: 8px;
+        margin-bottom: 8px;
+    }
+
+    .list-item-hover {
+        background-color: #f1f5f9;
+    }
+
+    .item-text {
+        font-size: 14px;
+        color: #334155;
+    }
+
+    .item-arrow {
+        width: 8px;
+        height: 8px;
+        border-top-width: 2px;
+        border-right-width: 2px;
+        border-color: #cbd5e1;
+        transform: rotate(45deg);
+    }
+
+    .empty-state {
+        padding: 60px 40px;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .empty-text {
+        color: #94a3b8;
+        font-size: 14px;
+    }
+</style>

@@ -1,4 +1,4 @@
-import { getMemory } from '../interface.uts'
+import { getMemory, getRunningApps } from '../interface.uts'
 
 // import { Locale } from 'Foundation';
 
@@ -7,7 +7,15 @@ import { getMemory } from '../interface.uts'
 // import { task_vm_info_data_t, task_flavor_t, TASK_VM_INFO } from "Darwin.Mach.task_info";
 // import { mach_task_self_ } from "Darwin.Mach.mach_init";
 
-export const getAppMemory : getMemory = function () : UTSJSONObject {
+export const getRunningAppProcesses : getRunningApps = function () : string[] {
+    return [];
+}
+
+export const getInstalledPackages : getInstalledApps = function () : string[] {
+    return [];
+}
+
+export const getAppMemory : getMemory = function (packageName?: string) : UTSJSONObject {
     
     let result : UTSJSONObject = {
         "TotalPss": 0

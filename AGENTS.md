@@ -16,7 +16,7 @@ This document serves as a guide for AI agents and developers working on the `uni
 ## 3. Solved Pitfalls & Coding Standards (Critical)
 
 ### 3.1 UTS Syntax Constraints
-- **No Anonymous Inner Classes**: UTS does not support the `new Interface() { ... }` syntax common in Java/Kotlin. 
+- **No Anonymous Inner Classes**: UTS does not support the `new Interface() { ... }` syntax common in Java/Kotlin.
   - *Fix*: Always use **Lambda expressions** `() => { ... }` or `(param) => { ... }`.
 - **Type Strictness**: UTS is stricter than standard TypeScript regarding Kotlin interop.
   - Use `MutableList<T>` instead of `ArrayList<T>` for lambda parameters coming from native callbacks.
@@ -25,6 +25,7 @@ This document serves as a guide for AI agents and developers working on the `uni
 - **Implicit Boolean conversion**: UTS does not support implicit truthy/falsy checks for strings in templates.
   - *Wrong*: `v-if="!errorMsg"`
   - *Correct*: `v-if="errorMsg == ''"`
+- **Page Lifecycles**: In `<script setup>`, page lifecycle functions (e.g., `onShow`, `onLoad`) are globally available and **do not** need to be imported from `@dcloudio/uni-app`.
 
 ### 3.2 Android Native Interop
 - **Main Thread Executor**: Do not cast `UTSAndroid.getDispatcher('main')` to `Executor`.
@@ -82,3 +83,7 @@ The color scheme is based on a Slate gray foundation with an Indigo accent for i
 ## 5. Deployment & Debugging
 - **Logcat**: Use `npm run logcat:app-android` to view compilation errors and runtime logs.
 - **Standard Base Limitation**: Standard HBuilderX runtimes will fail to load the native modules. Always use a Custom Base.
+
+## 6. 流程
+
+- 所有的uts文件、uvue文件修改后，都需要获取项目编译日志，如果存在错误，则进行修复，直到编译成功。
