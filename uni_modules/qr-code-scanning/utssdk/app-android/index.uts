@@ -39,6 +39,7 @@ import PorterDuffXfermode from 'android.graphics.PorterDuffXfermode'
 import BitmapDrawable from 'android.graphics.drawable.BitmapDrawable'
 import Path from 'android.graphics.Path'
 import ImageView from 'android.widget.ImageView'
+import PackageManager from 'android.content.pm.PackageManager'
 
 var currentOptions : ScanOptions | null = null
 var previewView : PreviewView | null = null
@@ -191,9 +192,39 @@ function createGalleryIcon(activity : Activity, size : Int) : Bitmap {
 }
 
 function openGallery(activity : Activity) : void {
+  // 优先级列表：常见的相册应用包名
+  const galleryPackages = [
+    "com.google.android.apps.photos",     // Google Photos
+    "com.miui.gallery",                   // 小米相册
+    "com.android.gallery3d",              // 系统相册
+    "com.samsung.android.gallery3d",      // 三星相册
+    "com.huawei.photos",                  // 华为相册
+    "com.oppo.gallery3d",                 // OPPO相册
+    "com.vivo.gallery"                    // vivo相册
+  ]
+  
   const intent = new Intent(Intent.ACTION_PICK)
   intent.setType("image/*")
-  activity.startActivityForResult(intent, PICK_IMAGE_REQUEST_CODE as Int)
+  
+  // 尝试按优先级打开相册
+  for (const packageName of galleryPackages) {
+    try {
+      intent.setPackage(packageName)
+      const packageManager = activity.getPackageManager()
+      const resolveInfo = packageManager.resolveActivity(intent, 0)
+      if (resolveInfo != null) {
+        activity.startActivityForResult(intent, PICK_IMAGE_REQUEST_CODE as Int)
+        return
+      }
+    } catch (e) {
+      // 继续尝试下一个
+    }
+  }
+  
+  // 如果都不可用，使用通用选择器
+  const genericIntent = new Intent(Intent.ACTION_PICK)
+  genericIntent.setType("image/*")
+  activity.startActivityForResult(genericIntent, PICK_IMAGE_REQUEST_CODE as Int)
 }
 
 function bindPreview(activity : Activity) : void {
