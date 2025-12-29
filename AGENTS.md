@@ -141,3 +141,19 @@ npm run logcat:app-ios -- --mode lastBuild
 2. **Review logs**: Use `npm run logcat:app-android` for runtime errors
 3. **Verify threading**: Confirm UI operations run on the main thread (Section 3.2)
 4. **Check lifecycle**: Ensure proper use of page lifecycle hooks (Section 3.1)
+
+### 6.4 Write Comprehensive Test Cases
+
+**Objective**: Create or enhance automated test cases for all pages in the project.
+
+**Prerequisites**:
+- **Read AGENTS.test.md** first to understand testing framework and API usage
+- Analyze target page structure, interactions, and business logic
+
+### 6.5 Run Tests on Target Platform
+
+**Objective**: Execute test suites on specified platforms and analyze results.
+
+**Prerequisites**:
+- **Read AGENTS.test.md** to understand platform-specific test commands
+- Ensure test cases are written and up-to-date
