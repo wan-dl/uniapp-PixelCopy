@@ -3,6 +3,7 @@
 
         <scroll-view class="content-area" scroll-y="true">
 
+            <!-- #ifdef APP-ANDROID -->
             <!-- Package Name Input -->
             <view class="input-card">
                 <text class="input-label">目标应用包名</text>
@@ -11,6 +12,7 @@
                     <text class="input-icon">▼</text>
                 </view>
             </view>
+            <!-- #endif -->
 
             <!-- Main Metric Card -->
             <view class="metric-card main-card">

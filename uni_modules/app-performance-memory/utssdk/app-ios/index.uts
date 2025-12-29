@@ -1,4 +1,4 @@
-import { getMemory, getRunningApps } from '../interface.uts'
+import { getMemory, getRunningApps, getInstalledApps } from '../interface.uts'
 
 // import { Locale } from 'Foundation';
 
@@ -18,7 +18,9 @@ export const getInstalledPackages : getInstalledApps = function () : string[] {
 export const getAppMemory : getMemory = function (packageName?: string) : UTSJSONObject {
     
     let result : UTSJSONObject = {
-        "TotalPss": 0
+        "TotalPss": 0,
+        "TotalPrivateDirty": 0,
+        "TotalSharedDirty": 0
     };
     
     let val = getAppMemoryUsage()
