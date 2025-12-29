@@ -1,8 +1,5 @@
 <template>
   <view class="page-container">
-    <view class="nav-bar">
-      <text class="nav-title">内存监控</text>
-    </view>
 
     <scroll-view class="content-area" scroll-y="true">
       <!-- Main Metric Card -->
@@ -50,10 +47,10 @@
       <button class="btn btn-secondary flex-1 margin-right-sm" hover-class="btn-hover" @click="handleRefresh">
         单次刷新
       </button>
-      <button 
-        class="btn flex-1" 
+      <button
+        class="btn flex-1"
         :class="globalIsMonitoring ? 'btn-danger' : 'btn-primary'"
-        hover-class="btn-hover" 
+        hover-class="btn-hover"
         @click="handleToggle"
       >
         {{ globalIsMonitoring ? '停止监控' : '持续监控' }}
@@ -98,10 +95,10 @@
       if (val > maxVal) maxVal = val;
       if (val < minVal) minVal = val;
     }
-    
+
     maxVal = maxVal * 1.1;
     minVal = minVal * 0.9;
-    
+
     const range = maxVal - minVal;
     const safeRange = range > 0 ? range : 1.0;
 
@@ -126,7 +123,7 @@
       const val = dataList[i];
       const x = padding + (chartWidth / 29.0) * i;
       const y = height - padding - ((val - minVal) / safeRange) * chartHeight;
-      
+
       if (i == 0) {
         ctx.moveTo(x, y);
       } else {
