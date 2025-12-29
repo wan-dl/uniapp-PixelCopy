@@ -34,20 +34,50 @@ This document serves as a guide for AI agents and developers working on the `uni
 ### 3.3 UX & Performance Optimizations
 - **Camera Startup**: To prevent the "black screen flash" during camera initialization, delay adding the `PreviewView` to the UI hierarchy until the `cameraProviderFuture` listener is triggered.
 
-## 4. UI/UX Guidelines
-The project follows a **Modern Minimalist (Indigo/Slate)** design system:
-- **Theme Colors**: 
-  - Primary: Indigo (`#6366f1`)
-  - Background: Slate (`#f8fafc`)
-  - Surface: White (`#ffffff`)
-- **Layout Patterns**:
-  - **Cards**: White background cards with `1px` Slate-200 borders and `16px` border-radius.
-  - **Action Bars**: Fixed bottom areas for primary buttons.
-  - **Navigation**: Clean nav bars with `18px` semi-bold titles.
-- **CSS Limitations in UVUE**:
-  - **Selectors**: Only class selectors are supported. Tag selectors (e.g., `button`) and attribute selectors (e.g., `[disabled]`) are **not** supported.
-  - **Alignment**: `align-items: baseline` is not supported; use `flex-end` or `center`.
-  - **Spacing**: The `gap` property is not supported; use `margin` on individual elements.
+## 4. UI Design Specification
+
+The project follows a modern, clean, card-based design system.
+
+### 4.1. Color Palette
+The color scheme is based on a Slate gray foundation with an Indigo accent for interactive elements.
+- **Primary / Accent**: `#6366f1` (Indigo) - Used for primary buttons and highlights.
+- **Background**: `#f8fafc` (Slate) - Used for the main page background.
+- **Surface / Card BG**: `#ffffff` (White) - Used for cards and navigation bars.
+- **Borders**: `#e2e8f0` (Slate) - Used for card and separator borders.
+- **Text**:
+    - **Headings**: `#1e293b` (Dark Slate)
+    - **Subheadings / Body**: `#334155`
+    - **Muted / Descriptions**: `#64748b`, `#94a3b8`
+- **Semantic**:
+    - **Success**: `#10b981` (Green)
+    - **Error**: `#ef4444` (Red)
+
+### 4.2. Typography
+- **Headings**: App titles use a large font size (`32px`) with heavy weight (`700`).
+- **Card Titles**: Feature titles within cards use a medium size (`16px`) with semi-bold weight (`600`).
+- **Body / Descriptions**: Standard text is typically `12px` to `16px`.
+- **Default uni-app fonts (`$uni-font-size-base`: 14px) are available but often overridden by component-specific styles.
+
+### 4.3. Layout & Spacing
+- **Core Layout**: The layout is built on Flexbox (`display: flex`).
+- **Padding**: Content areas have a consistent padding of `24px`.
+- **Spacing**: Gaps between elements are created using `margin` (e.g., `margin-bottom: 16px`), as the `gap` property is not supported in UVUE.
+- **Action Bar**: Critical actions are placed in a distinct bar at the bottom of the screen.
+
+### 4.4. Component Styles
+- **Cards**:
+    - **Shape**: `border-radius: 16px`.
+    - **Appearance**: White background with a `1px` solid border (`#e2e8f0`).
+    - **Padding**: `20px`.
+- **Buttons**:
+    - **Primary**: Pill-shaped (`border-radius: 25px`), solid Indigo background.
+    - **Secondary**: Pill-shaped, white background with a gray border.
+    - **Height**: A consistent height of `50px` is often used.
+
+### 4.5. CSS Limitations in UVUE (Critical)
+- **Selectors**: Only class selectors are supported. Tag selectors (e.g., `button`) and attribute selectors (e.g., `[disabled]`) are **not** supported.
+- **Alignment**: `align-items: baseline` is not supported; use `flex-end` or `center`.
+- **Spacing**: The `gap` property is not supported; use `margin` on individual elements.
 
 ## 5. Deployment & Debugging
 - **Logcat**: Use `npm run logcat:app-android` to view compilation errors and runtime logs.
