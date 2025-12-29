@@ -21,6 +21,11 @@
         <view class="card-content">
           <text class="result-value">{{ scanResult }}</text>
         </view>
+        <view class="card-actions">
+          <button class="btn-copy" hover-class="btn-copy-hover" @click="handleCopy">
+            复制
+          </button>
+        </view>
       </view>
 
       <!-- 错误展示卡片 -->
@@ -89,6 +94,23 @@ export default {
     handleStop() {
       stopScan()
       this.isScanning = false
+    },
+    handleCopy() {
+      uni.setClipboardData({
+        data: this.scanResult,
+        success: () => {
+          uni.showToast({
+            title: '已复制',
+            icon: 'success'
+          })
+        },
+        fail: () => {
+          uni.showToast({
+            title: '复制失败',
+            icon: 'none'
+          })
+        }
+      })
     }
   },
   onUnload() {
@@ -216,6 +238,30 @@ export default {
 
 .card-content {
   padding-top: 8px;
+  margin-bottom: 16px;
+}
+
+.card-actions {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+  padding-top: 12px;
+  border-top-width: 1px;
+  border-top-color: #f1f5f9;
+}
+
+.btn-copy {
+  height: 36px;
+  padding-left: 20px;
+  padding-right: 20px;
+  background-color: #6366f1;
+  border-radius: 18px;
+  font-size: 14px;
+  color: #ffffff;
+}
+
+.btn-copy-hover {
+  background-color: #4f46e5;
 }
 
 .result-value {
