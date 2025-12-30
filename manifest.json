@@ -61,7 +61,9 @@
 	"app-ios": {
 		"distribute": {
 			"modules": {},
-			"icons": {},
+			"icons": {
+				"appstore": "static/app-icon/1024x1024.png"
+			},
 			"splashScreens": {},
 			"privacyDescription": {
 				"NSPhotoLibraryUsageDescription": "二维码扫描功能，需要读取相册",
