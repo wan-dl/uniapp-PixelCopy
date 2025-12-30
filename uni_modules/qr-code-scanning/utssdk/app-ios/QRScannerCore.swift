@@ -84,11 +84,13 @@ class QRScannerCore: NSObject, AVCaptureMetadataOutputObjectsDelegate, UIImagePi
             captureSession = session
             previewLayer = preview
             
-            addBackButton(to: viewController.view, onClick: onBackClick)
-            addGalleryButton(to: viewController.view, onClick: onGalleryClick)
-            
             DispatchQueue.global(qos: .userInitiated).async {
                 session.startRunning()
+                
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                    self.addBackButton(to: viewController.view, onClick: onBackClick)
+                    self.addGalleryButton(to: viewController.view, onClick: onGalleryClick)
+                }
             }
         } catch {
             onFail("Failed to initialize camera: \(error.localizedDescription)")
