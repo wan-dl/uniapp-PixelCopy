@@ -28,9 +28,11 @@ object ScannerCore {
     private var previewView: PreviewView? = null
     private var backButton: ImageButton? = null
     private var galleryButton: ImageButton? = null
+    private var executor: java.util.concurrent.ExecutorService? = null
     
     fun initScanner() {
         scanner = BarcodeScanning.getClient()
+        executor = Executors.newSingleThreadExecutor()
     }
     
     fun createPreviewView(activity: Activity): PreviewView {
@@ -83,8 +85,10 @@ object ScannerCore {
             .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
             .build()
         
-        imageAnalysis.setAnalyzer(Executors.newSingleThreadExecutor()) { imageProxy ->
-            processImageProxy(imageProxy)
+        executor?.let { exec ->
+            imageAnalysis.setAnalyzer(exec) { imageProxy ->
+                processImageProxy(imageProxy)
+            }
         }
         
         provider.bindToLifecycle(activity as LifecycleOwner, cameraSelector, preview, imageAnalysis)
@@ -168,6 +172,13 @@ object ScannerCore {
     
     fun cleanup(activity: Activity?) {
         cameraProvider?.unbindAll()
+        cameraProvider = null
+        
+        executor?.shutdown()
+        executor = null
+        
+        scanner?.close()
+        scanner = null
         
         activity?.let {
             val rootView = it.window.decorView.findViewById<FrameLayout>(android.R.id.content)
@@ -176,11 +187,9 @@ object ScannerCore {
             galleryButton?.let { v -> rootView.removeView(v) }
         }
         
-        cameraProvider = null
         previewView = null
         backButton = null
         galleryButton = null
-        scanner = null
         onScanSuccess = null
         onScanFail = null
     }
