@@ -1,53 +1,9 @@
 import { StartScan, StopScan, ScanOptions } from '../interface.uts'
 import Activity from 'android.app.Activity'
-import PreviewView from 'androidx.camera.view.PreviewView'
-import ProcessCameraProvider from 'androidx.camera.lifecycle.ProcessCameraProvider'
-import CameraSelector from 'androidx.camera.core.CameraSelector'
-import Preview from 'androidx.camera.core.Preview'
-import ImageAnalysis from 'androidx.camera.core.ImageAnalysis'
-import ImageProxy from 'androidx.camera.core.ImageProxy'
-import BarcodeScanning from 'com.google.mlkit.vision.barcode.BarcodeScanning'
-import BarcodeScanner from 'com.google.mlkit.vision.barcode.BarcodeScanner'
-import InputImage from 'com.google.mlkit.vision.common.InputImage'
-import Barcode from 'com.google.mlkit.vision.barcode.common.Barcode'
-import Executors from 'java.util.concurrent.Executors'
-import Executor from 'java.util.concurrent.Executor'
-import FrameLayout from 'android.widget.FrameLayout'
-import ViewGroup from 'android.view.ViewGroup'
-import Runnable from 'java.lang.Runnable'
-import OnSuccessListener from 'com.google.android.gms.tasks.OnSuccessListener'
-import OnFailureListener from 'com.google.android.gms.tasks.OnFailureListener'
-import Exception from 'java.lang.Exception'
-import ContextCompat from 'androidx.core.content.ContextCompat'
-import ArrayList from 'java.util.ArrayList'
-import LifecycleOwner from 'androidx.lifecycle.LifecycleOwner'
 import Intent from 'android.content.Intent'
-import Uri from 'android.net.Uri'
-import Button from 'android.widget.Button'
-import Gravity from 'android.view.Gravity'
-import Color from 'android.graphics.Color'
-import TypedValue from 'android.util.TypedValue'
-import GradientDrawable from 'android.graphics.drawable.GradientDrawable'
-import ImageButton from 'android.widget.ImageButton'
-import BitmapFactory from 'android.graphics.BitmapFactory'
-import Bitmap from 'android.graphics.Bitmap'
-import Canvas from 'android.graphics.Canvas'
-import Paint from 'android.graphics.Paint'
-import RectF from 'android.graphics.RectF'
-import PorterDuff from 'android.graphics.PorterDuff'
-import PorterDuffXfermode from 'android.graphics.PorterDuffXfermode'
-import BitmapDrawable from 'android.graphics.drawable.BitmapDrawable'
-import Path from 'android.graphics.Path'
-import ImageView from 'android.widget.ImageView'
-import PackageManager from 'android.content.pm.PackageManager'
+import ScannerCore from 'uts.sdk.modules.qrCodeScanning.ScannerCore'
 
 var currentOptions : ScanOptions | null = null
-var previewView : PreviewView | null = null
-var cameraProvider : ProcessCameraProvider | null = null
-var scanner : BarcodeScanner | null = null
-var galleryButton : ImageButton | null = null
-var backButton : ImageButton | null = null
-
 const PICK_IMAGE_REQUEST_CODE = 1001
 
 export const startScan : StartScan = function (options : ScanOptions) {
@@ -59,353 +15,58 @@ export const startScan : StartScan = function (options : ScanOptions) {
     ['android.permission.CAMERA'],
     (allRight: boolean, grantedList: MutableList<string>) => {
       if (allRight) {
-        scanner = BarcodeScanning.getClient()
-        
-        // 创建预览视图
-        previewView = new PreviewView(activity)
-        previewView!.setLayoutParams(new FrameLayout.LayoutParams(
-          ViewGroup.LayoutParams.MATCH_PARENT,
-          ViewGroup.LayoutParams.MATCH_PARENT
-        ))
-        
-        startCamera(activity)
+        ScannerCore.initScanner()
+        ScannerCore.createPreviewView(activity)
+        ScannerCore.setCallbacks(
+          (result: string) => {
+            if (currentOptions?.success != null) {
+              currentOptions!.success!(result)
+            }
+            stopScan()
+          },
+          (error: string) => {
+            if (currentOptions?.fail != null) {
+              currentOptions!.fail!(error)
+            }
+            stopScan()
+          }
+        )
+        ScannerCore.startCamera(
+          activity,
+          (_) => {},
+          () => {
+            if (currentOptions?.fail != null) {
+              currentOptions!.fail!('SCAN_CANCELLED')
+            }
+            stopScan()
+          },
+          () => { ScannerCore.openGallery(activity, PICK_IMAGE_REQUEST_CODE as Int) }
+        )
       } else {
-        if (currentOptions != null && currentOptions!.fail != null) {
-          currentOptions!.fail!('Camera permission denied')
-        }
+        currentOptions?.fail?.('Camera permission denied')
       }
     },
-    (doNotAskAgain: boolean, grantedList: MutableList<string>) => {
-      if (currentOptions != null && currentOptions!.fail != null) {
-        currentOptions!.fail!('Camera permission denied')
-      }
+    (doNotAskAgain: boolean, grantedList2: MutableList<string>) => {
+      currentOptions?.fail?.('Camera permission denied')
     }
   )
 }
 
 export const stopScan : StopScan = function () {
-  if (cameraProvider != null) {
-    cameraProvider!.unbindAll()
-  }
-  
-  if (previewView != null || galleryButton != null || backButton != null) {
-    const activity = UTSAndroid.getUniActivity()
-    if (activity != null) {
-      const rootView = activity.getWindow().getDecorView().findViewById(android.R.id.content) as FrameLayout
-      if (previewView != null) {
-        rootView.removeView(previewView)
-      }
-      if (galleryButton != null) {
-        rootView.removeView(galleryButton)
-      }
-      if (backButton != null) {
-        rootView.removeView(backButton)
-      }
-    }
-  }
-  
+  ScannerCore.cleanup(UTSAndroid.getUniActivity())
   currentOptions = null
-  previewView = null
-  cameraProvider = null
-  scanner = null
-  galleryButton = null
-  backButton = null
 }
 
-function startCamera(activity : Activity) : void {
-  const cameraProviderFuture = ProcessCameraProvider.getInstance(activity)
-  const mainExecutor = ContextCompat.getMainExecutor(activity)
-  
-  cameraProviderFuture.addListener(() => {
-    // 添加到当前页面
-    if (previewView != null) {
-      const rootView = activity.getWindow().getDecorView().findViewById(android.R.id.content) as FrameLayout
-      rootView.addView(previewView)
-      
-      // 添加返回按钮
-      addBackButton(activity, rootView)
-      
-      // 添加相册按钮
-      addGalleryButton(activity, rootView)
-    }
-
-    cameraProvider = cameraProviderFuture.get() as ProcessCameraProvider
-    bindPreview(activity)
-  }, mainExecutor)
-}
-
-function addBackButton(activity : Activity, rootView : FrameLayout) : void {
-  backButton = new ImageButton(activity)
-  
-  const dp = activity.getResources().getDisplayMetrics().density
-  const buttonSize = (48 * dp).toInt()
-  const marginLeft = (24 * dp).toInt()
-  const marginTop = (60 * dp).toInt()
-  const cornerRadius = (24 * dp).toFloat()
-  
-  // Create back arrow icon bitmap
-  const iconBitmap = createBackIcon(activity, (24 * dp).toInt())
-  backButton!.setImageBitmap(iconBitmap)
-  backButton!.setScaleType(ImageView.ScaleType.CENTER)
-  
-  // Create rounded background with semi-transparent gray
-  const drawable = new GradientDrawable()
-  drawable.setColor(Color.parseColor("#80000000"))
-  drawable.setCornerRadius(cornerRadius)
-  backButton!.setBackground(drawable)
-  
-  const params = new FrameLayout.LayoutParams(buttonSize, buttonSize)
-  params.gravity = Gravity.TOP | Gravity.START
-  params.setMargins(marginLeft, marginTop, 0, 0)
-  backButton!.setLayoutParams(params)
-  
-  backButton!.setOnClickListener((v) => {
-    // 先通知页面重置状态
-    if (currentOptions != null && currentOptions!.fail != null) {
-      currentOptions!.fail!('SCAN_CANCELLED')
-    }
-    stopScan()
-  })
-  
-  rootView.addView(backButton)
-}
-
-function createBackIcon(activity : Activity, size : Int) : Bitmap {
-  const bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
-  const canvas = new Canvas(bitmap)
-  const paint = new Paint()
-  paint.setColor(Color.WHITE)
-  paint.setStyle(Paint.Style.STROKE)
-  paint.setStrokeWidth(3.0.toFloat())
-  paint.setAntiAlias(true)
-  paint.setStrokeCap(Paint.Cap.ROUND)
-  paint.setStrokeJoin(Paint.Join.ROUND)
-  
-  // Draw back arrow
-  const centerY = size / 2.0.toFloat()
-  const arrowSize = size * 0.4.toFloat()
-  
-  // Arrow shaft
-  canvas.drawLine(size * 0.7.toFloat(), centerY, size * 0.3.toFloat(), centerY, paint)
-  
-  // Arrow head
-  canvas.drawLine(size * 0.3.toFloat(), centerY, size * 0.45.toFloat(), centerY - arrowSize * 0.5.toFloat(), paint)
-  canvas.drawLine(size * 0.3.toFloat(), centerY, size * 0.45.toFloat(), centerY + arrowSize * 0.5.toFloat(), paint)
-  
-  return bitmap
-}
-
-function addGalleryButton(activity : Activity, rootView : FrameLayout) : void {
-  galleryButton = new ImageButton(activity)
-  
-  const dp = activity.getResources().getDisplayMetrics().density
-  const buttonSize = (56 * dp).toInt()
-  const marginRight = (24 * dp).toInt()
-  const marginBottom = (80 * dp).toInt()
-  const cornerRadius = (28 * dp).toFloat()
-  
-  // Create gallery icon bitmap
-  const iconBitmap = createGalleryIcon(activity, (24 * dp).toInt())
-  galleryButton!.setImageBitmap(iconBitmap)
-  galleryButton!.setScaleType(ImageView.ScaleType.CENTER)
-  
-  // Create rounded background with semi-transparent gray
-  const drawable = new GradientDrawable()
-  drawable.setColor(Color.parseColor("#80000000"))
-  drawable.setCornerRadius(cornerRadius)
-  galleryButton!.setBackground(drawable)
-  
-  const params = new FrameLayout.LayoutParams(buttonSize, buttonSize)
-  params.gravity = Gravity.BOTTOM | Gravity.END
-  params.setMargins(0, 0, marginRight, marginBottom)
-  galleryButton!.setLayoutParams(params)
-  
-  galleryButton!.setOnClickListener((v) => {
-    openGallery(activity)
-  })
-  
-  rootView.addView(galleryButton)
-}
-
-function createGalleryIcon(activity : Activity, size : Int) : Bitmap {
-  const bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
-  const canvas = new Canvas(bitmap)
-  const paint = new Paint()
-  paint.setColor(Color.WHITE)
-  paint.setStyle(Paint.Style.STROKE)
-  paint.setStrokeWidth(2.0.toFloat())
-  paint.setAntiAlias(true)
-  
-  const padding = size * 0.15.toFloat()
-  const rect = new RectF(padding, padding, size - padding, size - padding)
-  
-  // Draw rectangle (photo frame)
-  canvas.drawRoundRect(rect, 3.0.toFloat(), 3.0.toFloat(), paint)
-  
-  // Draw mountain shape (landscape icon)
-  paint.setStyle(Paint.Style.FILL)
-  const path = new Path()
-  const startX = padding + (size - 2 * padding) * 0.2.toFloat()
-  const startY = size - padding - (size - 2 * padding) * 0.2.toFloat()
-  path.moveTo(startX, startY)
-  path.lineTo(padding + (size - 2 * padding) * 0.5.toFloat(), padding + (size - 2 * padding) * 0.4.toFloat())
-  path.lineTo(size - padding, startY)
-  canvas.drawPath(path, paint)
-  
-  // Draw circle (sun/moon)
-  const circleX = size - padding - (size - 2 * padding) * 0.25.toFloat()
-  const circleY = padding + (size - 2 * padding) * 0.25.toFloat()
-  canvas.drawCircle(circleX, circleY, (size - 2 * padding) * 0.12.toFloat(), paint)
-  
-  return bitmap
-}
-
-function openGallery(activity : Activity) : void {
-  // 优先级列表：常见的相册应用包名
-  const galleryPackages = [
-    "com.google.android.apps.photos",     // Google Photos
-    "com.miui.gallery",                   // 小米相册
-    "com.android.gallery3d",              // 系统相册
-    "com.samsung.android.gallery3d",      // 三星相册
-    "com.huawei.photos",                  // 华为相册
-    "com.oppo.gallery3d",                 // OPPO相册
-    "com.vivo.gallery"                    // vivo相册
-  ]
-  
-  const intent = new Intent(Intent.ACTION_PICK)
-  intent.setType("image/*")
-  
-  // 尝试按优先级打开相册
-  for (const packageName of galleryPackages) {
-    try {
-      intent.setPackage(packageName)
-      const packageManager = activity.getPackageManager()
-      const resolveInfo = packageManager.resolveActivity(intent, 0)
-      if (resolveInfo != null) {
-        activity.startActivityForResult(intent, PICK_IMAGE_REQUEST_CODE as Int)
-        return
-      }
-    } catch (e) {
-      // 继续尝试下一个
-    }
-  }
-  
-  // 如果都不可用，使用通用选择器
-  const genericIntent = new Intent(Intent.ACTION_PICK)
-  genericIntent.setType("image/*")
-  activity.startActivityForResult(genericIntent, PICK_IMAGE_REQUEST_CODE as Int)
-}
-
-function bindPreview(activity : Activity) : void {
-  const provider = cameraProvider
-  if (provider == null) return
-  
-  const preview = new Preview.Builder().build()
-  preview.setSurfaceProvider(previewView!.getSurfaceProvider())
-  
-  const cameraSelector = new CameraSelector.Builder()
-    .requireLensFacing(CameraSelector.LENS_FACING_BACK)
-    .build()
-  
-  const imageAnalysis = new ImageAnalysis.Builder()
-    .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
-    .build()
-  
-  const executor = Executors.newSingleThreadExecutor()
-  
-  imageAnalysis.setAnalyzer(executor, (imageProxy : ImageProxy) => {
-    processImage(imageProxy)
-  })
-  
-  provider.bindToLifecycle(activity as LifecycleOwner, cameraSelector, preview, imageAnalysis)
-}
-
-function processImage(imageProxy : ImageProxy) : void {
-  const mediaImage = imageProxy.getImage()
-  if (mediaImage == null) {
-    imageProxy.close()
-    return
-  }
-  
-  const image = InputImage.fromMediaImage(mediaImage, imageProxy.getImageInfo().getRotationDegrees())
-  
-  scanner!.process(image)
-    .addOnSuccessListener((barcodes : MutableList<Barcode>) => {
-      if (barcodes.size > 0) {
-        const barcode = barcodes.get(0) as Barcode
-        const result = barcode.getRawValue()
-        if (result != null) {
-          const opts = currentOptions
-          if (opts != null && opts.success != null) {
-            opts.success!(result)
-          }
-          stopScan()
-        }
-      }
-      imageProxy.close()
-    })
-    .addOnFailureListener((e : Exception) => {
-      const opts = currentOptions
-      if (opts != null && opts.fail != null) {
-        const msg = e.message
-        opts.fail!(msg != null ? msg : 'Scan failed')
-      }
-      imageProxy.close()
-      stopScan()
-    })
-}
-
-
-// Handle activity result for gallery image selection
 UTSAndroid.onAppActivityResult((requestCode : Int, resultCode : Int, data : Intent | null) => {
-  if (requestCode == PICK_IMAGE_REQUEST_CODE && resultCode == Activity.RESULT_OK) {
-    if (data != null) {
-      const imageUri = data.getData()
-      if (imageUri != null) {
-        processImageFromGallery(imageUri)
-      } else {
-        if (currentOptions != null && currentOptions!.fail != null) {
-          currentOptions!.fail!('Failed to get image URI')
-        }
+  if (requestCode == PICK_IMAGE_REQUEST_CODE && resultCode == Activity.RESULT_OK && data != null) {
+    const imageUri = data.getData()
+    if (imageUri != null) {
+      const activity = UTSAndroid.getUniActivity()
+      if (activity != null) {
+        ScannerCore.processGalleryImage(activity, imageUri)
       }
+    } else {
+      currentOptions?.fail?.('Failed to get image URI')
     }
   }
 })
-
-function processImageFromGallery(imageUri : Uri) : void {
-  const activity = UTSAndroid.getUniActivity()
-  if (activity == null) return
-  
-  try {
-    const image = InputImage.fromFilePath(activity, imageUri)
-    scanner!.process(image)
-      .addOnSuccessListener((barcodes : MutableList<Barcode>) => {
-        if (barcodes.size > 0) {
-          const barcode = barcodes.get(0) as Barcode
-          const result = barcode.getRawValue()
-          if (result != null) {
-            const opts = currentOptions
-            if (opts != null && opts.success != null) {
-              opts.success!(result)
-            }
-            stopScan()
-          }
-        } else {
-          if (currentOptions != null && currentOptions!.fail != null) {
-            currentOptions!.fail!('No QR code found in image')
-          }
-        }
-      })
-      .addOnFailureListener((e : Exception) => {
-        const opts = currentOptions
-        if (opts != null && opts.fail != null) {
-          const msg = e.message
-          opts.fail!(msg != null ? msg : 'Failed to scan image')
-        }
-      })
-  } catch (e) {
-    if (currentOptions != null && currentOptions!.fail != null) {
-      currentOptions!.fail!('Error processing image')
-    }
-  }
-}
