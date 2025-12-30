@@ -1,16 +1,18 @@
 {
   "id": "qr-code-scanning",
   "displayName": "二维码扫描",
-  "version": "1.0.0",
+  "version": "1.3.0",
   "description": "基于 ML Kit 的二维码扫描模块",
   "keywords": [
     "qrcode",
     "barcode",
     "scan"
-  ],
+],
   "repository": "",
   "engines": {
-    "HBuilderX": "^4.0"
+    "HBuilderX": "^4.0",
+    "uni-app": "^4.0",
+    "uni-app-x": "^4.0"
   },
   "dcloudext": {
     "type": "uts",
@@ -26,19 +28,23 @@
       "qq": ""
     },
     "declaration": {
-      "ads": "",
-      "data": "",
+      "ads": "无",
+      "data": "无",
       "permissions": "相机权限"
     },
-    "npmurl": ""
+    "npmurl": "",
+    "darkmode": "√",
+    "i18n": "x",
+    "widescreen": "√"
   },
   "uni_modules": {
     "dependencies": [],
     "encrypt": [],
     "platforms": {
       "cloud": {
-        "tcb": "y",
-        "aliyun": "y"
+        "tcb": "√",
+        "aliyun": "√",
+        "alipay": "x"
       },
       "client": {
         "App": {
