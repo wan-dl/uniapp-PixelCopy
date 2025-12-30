@@ -1,0 +1,45 @@
+import { StartScan, StopScan, ScanOptions } from '../interface.uts'
+
+var currentOptions : ScanOptions | null = null
+
+export const startScan : StartScan = function (options : ScanOptions) {
+  currentOptions = options
+  
+  const viewController = UTSiOS.getCurrentViewController()
+  if (viewController == null) {
+    if (currentOptions != null && currentOptions!.fail != null) {
+      currentOptions!.fail!('ViewController not available')
+    }
+    return
+  }
+  
+  QRScannerCore.shared.startScanning(
+    viewController,
+    (result: string) => {
+      if (currentOptions != null && currentOptions!.success != null) {
+        currentOptions!.success!(result)
+      }
+      stopScan()
+    },
+    (error: string) => {
+      if (currentOptions != null && currentOptions!.fail != null) {
+        currentOptions!.fail!(error)
+      }
+      stopScan()
+    },
+    () => {
+      if (currentOptions != null && currentOptions!.fail != null) {
+        currentOptions!.fail!('SCAN_CANCELLED')
+      }
+      stopScan()
+    },
+    () => {
+      QRScannerCore.shared.openGallery(viewController)
+    }
+  )
+}
+
+export const stopScan : StopScan = function () {
+  QRScannerCore.shared.cleanup()
+  currentOptions = null
+}

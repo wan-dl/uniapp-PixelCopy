@@ -62,7 +62,12 @@
 		"distribute": {
 			"modules": {},
 			"icons": {},
-			"splashScreens": {}
+			"splashScreens": {},
+			"privacyDescription": {
+				"NSPhotoLibraryUsageDescription": "二维码扫描功能，需要读取相册",
+				"NSCameraUsageDescription": "二维码扫描功能，需要使用相册",
+				"NSLocalNetworkUsageDescription": "App需要访问本地网络"
+			}
 		}
 	},
 	"web": {
