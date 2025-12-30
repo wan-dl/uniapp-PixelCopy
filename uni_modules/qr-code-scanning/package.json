@@ -1,8 +1,8 @@
 {
     "id": "qr-code-scanning",
-    "displayName": "二维码扫描",
-    "version": "1.5.0",
-    "description": "基于 ML Kit 的二维码扫描模块",
+    "displayName": "二维码扫描插件 (App原生代码)",
+    "version": "1.6.0",
+    "description": "Android、iOS原生代码，二维码扫描模块",
     "keywords": [
         "二维码",
         "scan"
