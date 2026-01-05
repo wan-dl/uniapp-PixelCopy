@@ -1,5 +1,12 @@
 <template>
     <view class="page-container">
+        <!-- Top Path Bar -->
+        <view class="top-bar" v-if="screenshotPath != ''">
+            <view class="top-bar-content">
+                <text class="top-bar-label">保存位置</text>
+                <text class="top-bar-path">{{ screenshotPath }}</text>
+            </view>
+        </view>
 
         <view class="content-area">
             <!-- Placeholder State -->
@@ -19,11 +26,7 @@
                     <text class="card-time">刚刚</text>
                 </view>
                 <view class="card-content">
-                    <image :src="'file://' + screenshotPath" mode="widthFix" class="preview-image" />
-                    <view class="path-container">
-                        <text class="path-label">保存路径：</text>
-                        <text class="path-value">{{ screenshotPath }}</text>
-                    </view>
+                    <image :src="'file://' + screenshotPath" mode="widthFix" class="preview-image" @click="openPreview" />
                 </view>
             </view>
         </view>
@@ -39,13 +42,14 @@
 
 <script setup lang="uts">
     import { ref } from 'vue';
-    import { captureScreen } from '@/uni_modules/android-PixedCopy';
+    import { captureScreen, CaptureScreenResult, CaptureScreenFail } from '@/uni_modules/android-PixedCopy';
+    import { previewImage } from '@/uni_modules/image-preview';
 
     let screenshotPath = ref<string>('');
 
     function captureScreenshot() {
         captureScreen({
-            success: (res) => {
+            success: (res: CaptureScreenResult) => {
                 console.log('截图成功:', res.filePath);
                 screenshotPath.value = res.filePath;
                 uni.showToast({
@@ -53,7 +57,7 @@
                     icon: 'success'
                 });
             },
-            fail: (err) => {
+            fail: (err: CaptureScreenFail) => {
                 console.log('截图失败:', err.errMsg);
                 uni.showToast({
                     title: '截图失败: ' + err.errMsg,
@@ -62,7 +66,12 @@
             }
         });
     };
-</script>
+
+    function openPreview() {
+        if (screenshotPath.value != '') {
+            previewImage(screenshotPath.value);
+        }
+    };</script>
 
 <style>
     .page-container {
@@ -70,6 +79,36 @@
         background-color: #f8fafc;
         display: flex;
         flex-direction: column;
+    }
+
+    .top-bar {
+        background-color: #ffffff;
+        padding: 16px 24px;
+        border-bottom-width: 1px;
+        border-bottom-color: #e2e8f0;
+        flex-direction: row;
+        align-items: center;
+    }
+
+    .top-bar-icon {
+        font-size: 24px;
+        margin-right: 12px;
+    }
+
+    .top-bar-content {
+        flex: 1;
+    }
+
+    .top-bar-label {
+        font-size: 12px;
+        color: #64748b;
+        margin-bottom: 4px;
+    }
+
+    .top-bar-path {
+        font-size: 13px;
+        color: #334155;
+        line-height: 1.4;
     }
 
     .content-area {
@@ -193,6 +232,27 @@
         border-top-width: 1px;
         border-top-color: #e2e8f0;
         padding-bottom: 40px;
+    }
+
+    .path-info {
+        margin-bottom: 16px;
+        padding: 12px;
+        background-color: #f8fafc;
+        border-radius: 8px;
+        border-width: 1px;
+        border-color: #e2e8f0;
+    }
+
+    .path-info-label {
+        font-size: 12px;
+        color: #64748b;
+        margin-bottom: 4px;
+    }
+
+    .path-info-value {
+        font-size: 12px;
+        color: #334155;
+        line-height: 1.5;
     }
 
     .btn {

@@ -55,7 +55,7 @@
 
 <script setup lang="uts">
     import { ref } from 'vue'
-    import { startScan, stopScan } from '@/uni_modules/qr-code-scanning'
+    import { startScan, stopScan, ScanOptions } from '@/uni_modules/qr-code-scanning'
 
     const scanResult = ref('')
     const errorMsg = ref('')

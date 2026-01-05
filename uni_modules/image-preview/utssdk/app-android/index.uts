@@ -1,0 +1,92 @@
+import { UTSAndroid } from "io.dcloud.uts";
+import Activity from 'android.app.Activity';
+import Dialog from 'android.app.Dialog';
+import View from 'android.view.View';
+import MotionEvent from 'android.view.MotionEvent';
+import ScaleGestureDetector from 'android.view.ScaleGestureDetector';
+import ImageView from 'android.widget.ImageView';
+import BitmapFactory from 'android.graphics.BitmapFactory';
+import File from 'java.io.File';
+import LayoutParams from 'android.view.ViewGroup.LayoutParams';
+
+class ZoomImageView extends ImageView {
+    scaleFactor = 1.0;
+    scaleDetector: ScaleGestureDetector;
+    
+    constructor(activity: Activity) {
+        super(activity);
+        this.scaleDetector = new ScaleGestureDetector(activity, new ScaleListener(this));
+        this.setScaleType(ImageView.ScaleType.FIT_CENTER);
+        this.setBackgroundColor(0xFF000000.toInt());
+    }
+    
+    override onTouchEvent(event: MotionEvent): boolean {
+        this.scaleDetector.onTouchEvent(event);
+        return true;
+    }
+    
+    updateScale(factor: number) {
+        this.scaleFactor = factor;
+        this.setScaleX(factor.toFloat());
+        this.setScaleY(factor.toFloat());
+    }
+}
+
+class ScaleListener extends ScaleGestureDetector.SimpleOnScaleGestureListener {
+    imageView: ZoomImageView;
+    
+    constructor(imageView: ZoomImageView) {
+        super();
+        this.imageView = imageView;
+    }
+    
+    override onScale(detector: ScaleGestureDetector): boolean {
+        const currentScale = this.imageView.scaleX.toDouble();
+        const scaleDelta = detector.scaleFactor.toDouble();
+        let newFactor: number = currentScale * scaleDelta;
+        newFactor = Math.max(0.5, Math.min(newFactor, 5.0));
+        this.imageView.updateScale(newFactor);
+        return true;
+    }
+}
+
+export function previewImage(imagePath: string) {
+    const activity = UTSAndroid.getUniActivity()!;
+    
+    const dialog = new Dialog(activity, android.R.style.Theme_Black_NoTitleBar_Fullscreen);
+    const imageView = new ZoomImageView(activity);
+    
+    const file = new File(imagePath);
+    if (file.exists()) {
+        const bitmap = BitmapFactory.decodeFile(imagePath);
+        imageView.setImageBitmap(bitmap);
+    }
+    
+    // 创建关闭按钮
+    const closeButton = new android.widget.TextView(activity);
+    closeButton.setText("✕");
+    closeButton.setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 24.0.toFloat());
+    closeButton.setTextColor(0xFFFFFFFF.toInt());
+    closeButton.setPadding(40, 40, 40, 40);
+    closeButton.setBackgroundColor(0x80000000.toInt());
+    closeButton.setOnClickListener((v: View) => {
+        dialog.dismiss();
+    });
+    
+    // 使用 FrameLayout 叠加显示
+    const container = new android.widget.FrameLayout(activity);
+    container.addView(imageView, new android.widget.FrameLayout.LayoutParams(
+        LayoutParams.MATCH_PARENT, 
+        LayoutParams.MATCH_PARENT
+    ));
+    
+    const closeParams = new android.widget.FrameLayout.LayoutParams(
+        LayoutParams.WRAP_CONTENT,
+        LayoutParams.WRAP_CONTENT
+    );
+    closeParams.gravity = android.view.Gravity.TOP | android.view.Gravity.END;
+    container.addView(closeButton, closeParams);
+    
+    dialog.setContentView(container);
+    dialog.show();
+}
