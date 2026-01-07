@@ -4,7 +4,7 @@
         <view class="search-header">
             <view class="search-wrapper">
                 <text class="search-icon">🔍</text>
-                <input class="search-input" v-model="searchQuery" placeholder="搜索包名..." />
+                <input class="search-input" v-model="searchQuery" :placeholder="searchPlaceholder" />
                 <text v-if="searchQuery.length > 0" class="clear-icon" @click="searchQuery = ''">✕</text>
             </view>
         </view>
@@ -18,7 +18,7 @@
                 </view>
             </view>
             <view v-if="filteredAppList.length == 0" class="empty-state">
-                <text class="empty-text">{{ fullAppList.length == 0 ? '正在加载...' : '未找到匹配的包名' }}</text>
+                <text class="empty-text">{{ emptyText }}</text>
             </view>
         </scroll-view>
     </view>
@@ -27,9 +27,18 @@
 <script setup lang="uts">
     import { fetchInstalledApps, updateTargetPackage } from './memoryStore.uts';
     import { ref, onMounted, computed } from 'vue';
+    import { t } from '@/locale/i18n.uts';
 
     const searchQuery = ref('');
     const fullAppList = ref<string[]>([]);
+
+    const searchPlaceholder = computed(() : string => t('appList.search'))
+    const emptyText = computed(() : string => {
+        if (fullAppList.value.length == 0) {
+            return t('common.loading')
+        }
+        return t('appList.notFound')
+    })
     
     const filteredAppList = computed(() : string[] => {
         const query = searchQuery.value.toLowerCase().trim();

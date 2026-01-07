@@ -9,21 +9,21 @@
                         <view class="scan-line" :class="{ 'scanning-animation': isScanning }"></view>
                     </view>
                 </view>
-                <text class="placeholder-text">{{ isScanning ? '正在初始化相机...' : '点击下方按钮开始扫描' }}</text>
+                <text class="placeholder-text">{{ placeholderText }}</text>
             </view>
 
             <!-- 结果展示卡片 -->
             <view v-if="scanResult != ''" class="card result-card">
                 <view class="card-header">
-                    <text class="card-title">扫描成功</text>
-                    <text class="card-time">刚刚</text>
+                    <text class="card-title">{{ successText }}</text>
+                    <text class="card-time">{{ justNowText }}</text>
                 </view>
                 <view class="card-content">
                     <text class="result-value">{{ scanResult }}</text>
                 </view>
                 <view class="card-actions">
                     <button class="btn-copy" hover-class="btn-copy-hover" @click="handleCopy">
-                        复制
+                        {{ copyText }}
                     </button>
                 </view>
             </view>
@@ -31,7 +31,7 @@
             <!-- 错误展示卡片 -->
             <view v-if="errorMsg != ''" class="card error-card">
                 <view class="card-header">
-                    <text class="card-title error-title">发生错误</text>
+                    <text class="card-title error-title">{{ errorText }}</text>
                 </view>
                 <view class="card-content">
                     <text class="error-message">{{ errorMsg }}</text>
@@ -42,24 +42,43 @@
         <!-- 底部操作区 -->
         <view class="action-bar">
             <button class="btn btn-primary" hover-class="btn-hover" @click="handleScan" :disabled="isScanning">
-                {{ isScanning ? '正在启动...' : '开始扫描' }}
+                {{ startBtnText }}
             </button>
 
             <button class="btn btn-secondary" hover-class="btn-secondary-hover" @click="handleStop"
                 :disabled="!isScanning" :class="{ 'btn-disabled': !isScanning }">
-                停止扫描
+                {{ stopText }}
             </button>
         </view>
     </view>
 </template>
 
 <script setup lang="uts">
-    import { ref } from 'vue'
+    import { ref, computed } from 'vue'
     import { startScan, stopScan, ScanOptions } from '@/uni_modules/qr-code-scanning'
+    import { t } from '@/locale/i18n.uts'
 
     const scanResult = ref('')
     const errorMsg = ref('')
     const isScanning = ref(false)
+
+    const placeholderText = computed(() : string => {
+        if (isScanning.value) {
+            return t('qrcode.initializing')
+        }
+        return t('qrcode.placeholder')
+    })
+    const successText = computed(() : string => t('qrcode.success'))
+    const justNowText = computed(() : string => t('common.justNow'))
+    const copyText = computed(() : string => t('common.copy'))
+    const errorText = computed(() : string => t('qrcode.error'))
+    const startBtnText = computed(() : string => {
+        if (isScanning.value) {
+            return t('qrcode.starting')
+        }
+        return t('qrcode.start')
+    })
+    const stopText = computed(() : string => t('qrcode.stop'))
 
     function handleScan() {
         scanResult.value = ''
@@ -93,13 +112,13 @@
             data: scanResult.value,
             success: () => {
                 uni.showToast({
-                    title: '已复制',
+                    title: t('common.copied'),
                     icon: 'success'
                 })
             },
             fail: () => {
                 uni.showToast({
-                    title: '复制失败',
+                    title: t('common.copyFailed'),
                     icon: 'none'
                 })
             }

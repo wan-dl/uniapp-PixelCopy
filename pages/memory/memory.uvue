@@ -6,9 +6,9 @@
             <!-- #ifdef APP-ANDROID -->
             <!-- Package Name Input -->
             <view class="input-card">
-                <text class="input-label">目标应用包名</text>
+                <text class="input-label">{{ targetPackageText }}</text>
                 <view class="input-wrapper" @click="showPackageList">
-                    <text class="input-text">{{ targetPackageName == '' ? '当前应用' : targetPackageName }}</text>
+                    <text class="input-text">{{ displayPackageName }}</text>
                     <text class="input-icon">▼</text>
                 </view>
             </view>
@@ -17,9 +17,9 @@
             <!-- Main Metric Card -->
             <view class="metric-card main-card">
                 <view class="main-card-header">
-                    <text class="metric-label">App 总内存 (PSS)</text>
+                    <text class="metric-label">{{ totalPssText }}</text>
                     <view class="time-tag">
-                        <text class="time-tag-text">更新于 {{ globalMemoryData.updateTime }}</text>
+                        <text class="time-tag-text">{{ updatedAtText }} {{ globalMemoryData.updateTime }}</text>
                     </view>
                 </view>
                 <view class="metric-value-container">
@@ -28,7 +28,7 @@
                 </view>
                 <view class="status-indicator">
                     <view class="dot" :class="globalIsMonitoring ? 'dot-active' : ''"></view>
-                    <text class="metric-desc">{{ globalIsMonitoring ? '持续监控中' : '静态采样数据' }}</text>
+                    <text class="metric-desc">{{ statusText }}</text>
                 </view>
             </view>
 
@@ -36,9 +36,9 @@
             <view class="metric-card chart-card">
                 <view class="card-inner-header">
                     <view class="title-with-icon">
-                        <text class="card-inner-title">内存波动趋势</text>
+                        <text class="card-inner-title">{{ trendText }}</text>
                     </view>
-                    <text class="data-count-text">采样点: {{ globalHistoryData.length }}</text>
+                    <text class="data-count-text">{{ samplePointsText }}: {{ globalHistoryData.length }}</text>
                 </view>
                 <canvas id="memoryChart" canvas-id="memoryChart" class="memory-canvas"></canvas>
             </view>
@@ -46,7 +46,7 @@
             <!-- Detailed Metrics Grid -->
             <view class="details-grid">
                 <view class="metric-card detail-card detail-card-left">
-                    <text class="detail-label">私有内存</text>
+                    <text class="detail-label">{{ privateMemoryText }}</text>
                     <view class="detail-value-row">
                         <text
                             class="detail-value">{{ globalMemoryData.TotalPrivateDirty != '' ? globalMemoryData.TotalPrivateDirty : '0' }}</text>
@@ -57,7 +57,7 @@
                     </view>
                 </view>
                 <view class="metric-card detail-card">
-                    <text class="detail-label">共享内存</text>
+                    <text class="detail-label">{{ sharedMemoryText }}</text>
                     <view class="detail-value-row">
                         <text
                             class="detail-value">{{ globalMemoryData.TotalSharedDirty != '' ? globalMemoryData.TotalSharedDirty : '0' }}</text>
@@ -73,11 +73,11 @@
         <!-- Bottom Action -->
         <view class="action-bar">
             <button class="btn btn-secondary flex-1 margin-right-sm" hover-class="btn-hover" @click="handleRefresh">
-                单次刷新
+                {{ refreshText }}
             </button>
             <button class="btn flex-1" :class="globalIsMonitoring ? 'btn-danger' : 'btn-primary'"
                 hover-class="btn-hover" @click="handleToggle">
-                {{ globalIsMonitoring ? '停止监控' : '持续监控' }}
+                {{ toggleBtnText }}
             </button>
         </view>
     </view>
@@ -85,7 +85,35 @@
 
 <script setup lang="uts">
     import { globalMemoryData, globalHistoryData, globalIsMonitoring, fetchMemoryData, toggleGlobalMonitoring, updateTargetPackage, targetPackageName, fetchRunningApps, fetchInstalledApps } from './memoryStore.uts';
-    import { onMounted, watch } from 'vue';
+    import { onMounted, watch, computed } from 'vue';
+    import { t } from '@/locale/i18n.uts';
+
+    const targetPackageText = computed(() : string => t('memory.targetPackage'))
+    const displayPackageName = computed(() : string => {
+        if (targetPackageName.value == '') {
+            return t('memory.currentApp')
+        }
+        return targetPackageName.value
+    })
+    const totalPssText = computed(() : string => t('memory.totalPss'))
+    const updatedAtText = computed(() : string => t('memory.updatedAt'))
+    const statusText = computed(() : string => {
+        if (globalIsMonitoring.value) {
+            return t('memory.monitoring')
+        }
+        return t('memory.staticData')
+    })
+    const trendText = computed(() : string => t('memory.trend'))
+    const samplePointsText = computed(() : string => t('memory.samplePoints'))
+    const privateMemoryText = computed(() : string => t('memory.privateMemory'))
+    const sharedMemoryText = computed(() : string => t('memory.sharedMemory'))
+    const refreshText = computed(() : string => t('memory.refresh'))
+    const toggleBtnText = computed(() : string => {
+        if (globalIsMonitoring.value) {
+            return t('memory.stopMonitor')
+        }
+        return t('memory.startMonitor')
+    })
 
     function handleRefresh() {
         fetchMemoryData();
@@ -97,7 +125,7 @@
 
     function showSelectionSheet(options : string[], title : string) {
         if (options.length == 0) {
-            uni.showToast({ title: '列表为空', icon: 'none' });
+            uni.showToast({ title: t('memory.listEmpty'), icon: 'none' });
             return;
         }
 
@@ -108,7 +136,7 @@
 
         uni.showActionSheet({
             itemList: displayOptions,
-            title: title + (options.length > 50 ? ' (仅显示前50个)' : ''),
+            title: title + (options.length > 50 ? ' ' + t('memory.showFirst50') : ''),
             success: (res) => {
                 updateTargetPackage(displayOptions[res.tapIndex]);
             }
@@ -117,14 +145,14 @@
 
     function showPackageList() {
         uni.showActionSheet({
-            itemList: ['当前应用', '手动输入包名', '所有已安装应用'],
+            itemList: [t('memory.currentApp'), t('memory.inputPackage'), t('memory.allInstalled')],
             success: (res) => {
                 if (res.tapIndex == 0) {
                     updateTargetPackage('');
                 } else if (res.tapIndex == 1) {
                     uni.showModal({
-                        title: '输入包名',
-                        placeholderText: '请输入完整的包名',
+                        title: t('memory.inputTitle'),
+                        placeholderText: t('memory.inputPlaceholder'),
                         editable: true,
                         success: (modalRes) => {
                             if (modalRes.confirm && modalRes.content != null) {

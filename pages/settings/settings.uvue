@@ -1,0 +1,193 @@
+<template>
+	<view class="page-container">
+		<scroll-view class="content-area" scroll-y="true">
+			<!-- 语言设置 -->
+			<view class="section">
+				<text class="section-title">{{ languageSectionTitle }}</text>
+				<view class="setting-card">
+					<view class="setting-item" @click="showLanguagePicker" hover-class="setting-item-hover">
+						<view class="setting-left">
+							<view class="setting-icon icon-language"></view>
+							<view class="setting-info">
+								<text class="setting-label">{{ languageLabel }}</text>
+								<text class="setting-desc">{{ languageDesc }}</text>
+							</view>
+						</view>
+						<view class="setting-right">
+							<text class="setting-value">{{ currentLanguageText }}</text>
+							<view class="setting-arrow"></view>
+						</view>
+					</view>
+				</view>
+			</view>
+
+			<!-- 关于 -->
+			<view class="section">
+				<text class="section-title">{{ aboutTitle }}</text>
+				<view class="setting-card">
+					<view class="setting-item">
+						<view class="setting-left">
+							<view class="setting-icon icon-version"></view>
+							<view class="setting-info">
+								<text class="setting-label">{{ versionLabel }}</text>
+								<text class="setting-desc">1.0.0</text>
+							</view>
+						</view>
+					</view>
+				</view>
+			</view>
+		</scroll-view>
+	</view>
+</template>
+
+<script setup lang="uts">
+	import { ref, computed } from 'vue'
+	import { t, currentLocale, setLocale } from '@/locale/i18n.uts'
+
+	const languageSectionTitle = computed(() : string => t('settings.language'))
+	const languageLabel = computed(() : string => t('settings.language'))
+	const languageDesc = computed(() : string => t('settings.languageDesc'))
+	const aboutTitle = computed(() : string => t('settings.about'))
+	const versionLabel = computed(() : string => t('settings.version'))
+
+	const currentLanguageText = computed(() : string => {
+		if (currentLocale.value == 'en-US') {
+			return 'English'
+		}
+		return '中文'
+	})
+
+	function showLanguagePicker() {
+		uni.showActionSheet({
+			itemList: ['中文', 'English'],
+			success: (res) => {
+				if (res.tapIndex == 0) {
+					setLocale('zh-CN')
+				} else if (res.tapIndex == 1) {
+					setLocale('en-US')
+				}
+				// 更新导航栏标题
+				uni.setNavigationBarTitle({
+					title: t('settings.title')
+				})
+			}
+		})
+	}
+</script>
+
+<style>
+	.page-container {
+		flex: 1;
+		background-color: #f8fafc;
+		display: flex;
+		flex-direction: column;
+	}
+
+	.content-area {
+		flex: 1;
+		padding: 24px;
+	}
+
+	.section {
+		margin-bottom: 24px;
+	}
+
+	.section-title {
+		font-size: 13px;
+		font-weight: 600;
+		color: #64748b;
+		margin-bottom: 12px;
+		margin-left: 4px;
+	}
+
+	.setting-card {
+		background-color: #ffffff;
+		border-radius: 16px;
+		border-width: 1px;
+		border-color: #e2e8f0;
+		overflow: hidden;
+	}
+
+	.setting-item {
+		display: flex;
+		flex-direction: row;
+		justify-content: space-between;
+		align-items: center;
+		padding: 16px 20px;
+		border-bottom-width: 1px;
+		border-bottom-color: #f1f5f9;
+	}
+
+	.setting-item:last-child {
+		border-bottom-width: 0;
+	}
+
+	.setting-item-hover {
+		background-color: #f8fafc;
+	}
+
+	.setting-left {
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+		flex: 1;
+	}
+
+	.setting-icon {
+		width: 40px;
+		height: 40px;
+		border-radius: 10px;
+		margin-right: 14px;
+	}
+
+	.icon-language {
+		background-color: #dbeafe;
+		border-width: 1px;
+		border-color: #bfdbfe;
+	}
+
+	.icon-version {
+		background-color: #e0e7ff;
+		border-width: 1px;
+		border-color: #c7d2fe;
+	}
+
+	.setting-info {
+		display: flex;
+		flex-direction: column;
+		flex: 1;
+	}
+
+	.setting-label {
+		font-size: 16px;
+		font-weight: 500;
+		color: #334155;
+		margin-bottom: 2px;
+	}
+
+	.setting-desc {
+		font-size: 13px;
+		color: #94a3b8;
+	}
+
+	.setting-right {
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+	}
+
+	.setting-value {
+		font-size: 14px;
+		color: #64748b;
+		margin-right: 8px;
+	}
+
+	.setting-arrow {
+		width: 8px;
+		height: 8px;
+		border-top-width: 2px;
+		border-right-width: 2px;
+		border-color: #cbd5e1;
+		transform: rotate(45deg);
+	}
+</style>

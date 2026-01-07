@@ -1,16 +1,16 @@
 <template>
   <view class="page-container">
     <view class="header-section">
-      <text class="app-title">PixelCopy</text>
-      <text class="app-subtitle">开发者工具箱</text>
+      <text class="app-title">{{ appTitle }}</text>
+      <text class="app-subtitle">{{ appSubtitle }}</text>
     </view>
-    
+
     <view class="menu-list">
       <view class="menu-card" @click="goToMemory" hover-class="menu-card-hover">
         <view class="card-icon icon-memory"></view>
         <view class="card-content">
-          <text class="card-title">内存监控</text>
-          <text class="card-desc">实时监测应用内存使用情况</text>
+          <text class="card-title">{{ memoryMonitor }}</text>
+          <text class="card-desc">{{ memoryDesc }}</text>
         </view>
         <view class="card-arrow"></view>
       </view>
@@ -18,8 +18,8 @@
       <view class="menu-card" @click="goToScreenshot" hover-class="menu-card-hover">
         <view class="card-icon icon-screenshot"></view>
         <view class="card-content">
-          <text class="card-title">截图功能</text>
-          <text class="card-desc">原生 PixelCopy 截图与保存</text>
+          <text class="card-title">{{ screenshot }}</text>
+          <text class="card-desc">{{ screenshotDesc }}</text>
         </view>
         <view class="card-arrow"></view>
       </view>
@@ -27,8 +27,17 @@
       <view class="menu-card" @click="goToQRCode" hover-class="menu-card-hover">
         <view class="card-icon icon-qrcode"></view>
         <view class="card-content">
-          <text class="card-title">二维码扫描</text>
-          <text class="card-desc">MLKit 相机扫码与识别</text>
+          <text class="card-title">{{ qrcode }}</text>
+          <text class="card-desc">{{ qrcodeDesc }}</text>
+        </view>
+        <view class="card-arrow"></view>
+      </view>
+
+      <view class="menu-card" @click="goToSettings" hover-class="menu-card-hover">
+        <view class="card-icon icon-settings"></view>
+        <view class="card-content">
+          <text class="card-title">{{ settings }}</text>
+          <text class="card-desc">{{ settingsDesc }}</text>
         </view>
         <view class="card-arrow"></view>
       </view>
@@ -37,6 +46,20 @@
 </template>
 
 <script setup lang="uts">
+  import { computed } from 'vue'
+  import { t } from '@/locale/i18n.uts'
+
+  const appTitle = computed(() : string => t('app.title'))
+  const appSubtitle = computed(() : string => t('app.subtitle'))
+  const memoryMonitor = computed(() : string => t('index.memoryMonitor'))
+  const memoryDesc = computed(() : string => t('index.memoryDesc'))
+  const screenshot = computed(() : string => t('index.screenshot'))
+  const screenshotDesc = computed(() : string => t('index.screenshotDesc'))
+  const qrcode = computed(() : string => t('index.qrcode'))
+  const qrcodeDesc = computed(() : string => t('index.qrcodeDesc'))
+  const settings = computed(() : string => t('index.settings'))
+  const settingsDesc = computed(() : string => t('index.settingsDesc'))
+
   function goToMemory() {
     uni.navigateTo({
       url: '/pages/memory/memory'
@@ -54,12 +77,18 @@
       url: '/pages/qrcode/qrcode'
     });
   }
+
+  function goToSettings() {
+    uni.navigateTo({
+      url: '/pages/settings/settings'
+    });
+  }
 </script>
 
 <style>
   .page-container {
     flex: 1;
-    background-color: #f8fafc;
+    background-color: #ffffff;
     padding: 24px;
   }
 
@@ -125,6 +154,12 @@
     background-color: #d1fae5; /* Emerald 100 */
     border-width: 1px;
     border-color: #a7f3d0;
+  }
+
+  .icon-settings {
+    background-color: #fef3c7; /* Amber 100 */
+    border-width: 1px;
+    border-color: #fde68a;
   }
 
   .card-content {

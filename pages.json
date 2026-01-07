@@ -29,6 +29,12 @@
 			"style": {
 				"navigationBarTitleText": "二维码扫描"
 			}
+		},
+		{
+			"path": "pages/settings/settings",
+			"style": {
+				"navigationBarTitleText": "设置"
+			}
 		}
 	],
 	"globalStyle": {

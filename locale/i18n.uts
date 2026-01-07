@@ -1,0 +1,204 @@
+import { ref, reactive, computed } from 'vue'
+
+// 当前语言
+export const currentLocale = ref<string>('zh-CN')
+
+// 中文语言包
+const zhCN : UTSJSONObject = {
+	// 通用
+	'app.title': 'PixelCopy',
+	'app.subtitle': '开发者工具箱',
+	'common.cancel': '取消',
+	'common.confirm': '确定',
+	'common.copy': '复制',
+	'common.copied': '已复制',
+	'common.copyFailed': '复制失败',
+	'common.justNow': '刚刚',
+	'common.loading': '正在加载...',
+
+	// 首页
+	'index.memoryMonitor': '内存监控',
+	'index.memoryDesc': '实时监测应用内存使用情况',
+	'index.screenshot': '截图功能',
+	'index.screenshotDesc': '原生 PixelCopy 截图与保存',
+	'index.qrcode': '二维码扫描',
+	'index.qrcodeDesc': 'MLKit 相机扫码与识别',
+	'index.settings': '设置',
+	'index.settingsDesc': '语言切换与应用设置',
+
+	// 截图页面
+	'screenshot.title': '截图功能',
+	'screenshot.saveLocation': '保存位置',
+	'screenshot.placeholder': '点击下方按钮截取当前屏幕',
+	'screenshot.preview': '截图预览',
+	'screenshot.capture': '立即截图',
+	'screenshot.success': '截图成功',
+	'screenshot.failed': '截图失败',
+
+	// 二维码页面
+	'qrcode.title': '二维码扫描',
+	'qrcode.initializing': '正在初始化相机...',
+	'qrcode.placeholder': '点击下方按钮开始扫描',
+	'qrcode.success': '扫描成功',
+	'qrcode.error': '发生错误',
+	'qrcode.start': '开始扫描',
+	'qrcode.starting': '正在启动...',
+	'qrcode.stop': '停止扫描',
+
+	// 内存监控页面
+	'memory.title': '内存监控',
+	'memory.targetPackage': '目标应用包名',
+	'memory.currentApp': '当前应用',
+	'memory.totalPss': 'App 总内存 (PSS)',
+	'memory.updatedAt': '更新于',
+	'memory.monitoring': '持续监控中',
+	'memory.staticData': '静态采样数据',
+	'memory.trend': '内存波动趋势',
+	'memory.samplePoints': '采样点',
+	'memory.privateMemory': '私有内存',
+	'memory.sharedMemory': '共享内存',
+	'memory.refresh': '单次刷新',
+	'memory.startMonitor': '持续监控',
+	'memory.stopMonitor': '停止监控',
+	'memory.inputPackage': '手动输入包名',
+	'memory.allInstalled': '所有已安装应用',
+	'memory.inputTitle': '输入包名',
+	'memory.inputPlaceholder': '请输入完整的包名',
+	'memory.showFirst50': '(仅显示前50个)',
+	'memory.listEmpty': '列表为空',
+
+	// 应用列表页面
+	'appList.title': '选择应用',
+	'appList.search': '搜索包名...',
+	'appList.notFound': '未找到匹配的包名',
+
+	// 设置页面
+	'settings.title': '设置',
+	'settings.language': '语言',
+	'settings.languageDesc': '切换应用显示语言',
+	'settings.chinese': '中文',
+	'settings.english': 'English',
+	'settings.about': '关于',
+	'settings.version': '版本',
+
+	// App.uvue
+	'app.exitConfirm': '再按一次退出应用'
+}
+
+// 英文语言包
+const enUS : UTSJSONObject = {
+	// 通用
+	'app.title': 'PixelCopy',
+	'app.subtitle': 'Developer Toolbox',
+	'common.cancel': 'Cancel',
+	'common.confirm': 'OK',
+	'common.copy': 'Copy',
+	'common.copied': 'Copied',
+	'common.copyFailed': 'Copy failed',
+	'common.justNow': 'Just now',
+	'common.loading': 'Loading...',
+
+	// 首页
+	'index.memoryMonitor': 'Memory Monitor',
+	'index.memoryDesc': 'Real-time app memory monitoring',
+	'index.screenshot': 'Screenshot',
+	'index.screenshotDesc': 'Native PixelCopy capture & save',
+	'index.qrcode': 'QR Code Scanner',
+	'index.qrcodeDesc': 'MLKit camera scanning & recognition',
+	'index.settings': 'Settings',
+	'index.settingsDesc': 'Language switch & app settings',
+
+	// 截图页面
+	'screenshot.title': 'Screenshot',
+	'screenshot.saveLocation': 'Save Location',
+	'screenshot.placeholder': 'Tap button below to capture screen',
+	'screenshot.preview': 'Preview',
+	'screenshot.capture': 'Capture Now',
+	'screenshot.success': 'Screenshot saved',
+	'screenshot.failed': 'Screenshot failed',
+
+	// 二维码页面
+	'qrcode.title': 'QR Code Scanner',
+	'qrcode.initializing': 'Initializing camera...',
+	'qrcode.placeholder': 'Tap button below to start scanning',
+	'qrcode.success': 'Scan Success',
+	'qrcode.error': 'Error',
+	'qrcode.start': 'Start Scan',
+	'qrcode.starting': 'Starting...',
+	'qrcode.stop': 'Stop Scan',
+
+	// 内存监控页面
+	'memory.title': 'Memory Monitor',
+	'memory.targetPackage': 'Target Package Name',
+	'memory.currentApp': 'Current App',
+	'memory.totalPss': 'App Total Memory (PSS)',
+	'memory.updatedAt': 'Updated at',
+	'memory.monitoring': 'Monitoring...',
+	'memory.staticData': 'Static sample data',
+	'memory.trend': 'Memory Trend',
+	'memory.samplePoints': 'Samples',
+	'memory.privateMemory': 'Private Memory',
+	'memory.sharedMemory': 'Shared Memory',
+	'memory.refresh': 'Refresh',
+	'memory.startMonitor': 'Start Monitor',
+	'memory.stopMonitor': 'Stop Monitor',
+	'memory.inputPackage': 'Enter Package Name',
+	'memory.allInstalled': 'All Installed Apps',
+	'memory.inputTitle': 'Enter Package Name',
+	'memory.inputPlaceholder': 'Enter full package name',
+	'memory.showFirst50': '(First 50 only)',
+	'memory.listEmpty': 'List is empty',
+
+	// 应用列表页面
+	'appList.title': 'Select App',
+	'appList.search': 'Search package...',
+	'appList.notFound': 'No matching package found',
+
+	// 设置页面
+	'settings.title': 'Settings',
+	'settings.language': 'Language',
+	'settings.languageDesc': 'Switch display language',
+	'settings.chinese': '中文',
+	'settings.english': 'English',
+	'settings.about': 'About',
+	'settings.version': 'Version',
+
+	// App.uvue
+	'app.exitConfirm': 'Press again to exit'
+}
+
+// 获取翻译文本
+export function t(key : string) : string {
+	const locale = currentLocale.value
+	let messages : UTSJSONObject
+	if (locale == 'en-US') {
+		messages = enUS
+	} else {
+		messages = zhCN
+	}
+	const value = messages[key]
+	if (value != null) {
+		return value as string
+	}
+	return key
+}
+
+// 切换语言
+export function setLocale(locale : string) {
+	currentLocale.value = locale
+	// 保存到本地存储
+	uni.setStorageSync('app_locale', locale)
+}
+
+// 初始化语言(从本地存储读取)
+export function initLocale() {
+	const savedLocale = uni.getStorageSync('app_locale') as string
+	if (savedLocale != null && savedLocale != '') {
+		currentLocale.value = savedLocale
+	}
+}
+
+// 获取当前语言
+export function getLocale() : string {
+	return currentLocale.value
+}

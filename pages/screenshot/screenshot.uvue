@@ -3,7 +3,7 @@
         <!-- Top Path Bar -->
         <view class="top-bar" v-if="screenshotPath != ''">
             <view class="top-bar-content">
-                <text class="top-bar-label">保存位置</text>
+                <text class="top-bar-label">{{ saveLocationText }}</text>
                 <text class="top-bar-path">{{ screenshotPath }}</text>
             </view>
         </view>
@@ -16,14 +16,14 @@
                         <view class="icon-camera-lens"></view>
                     </view>
                 </view>
-                <text class="placeholder-text">点击下方按钮截取当前屏幕</text>
+                <text class="placeholder-text">{{ placeholderText }}</text>
             </view>
 
             <!-- Result Card -->
             <view class="card result-card" v-if="screenshotPath != ''">
                 <view class="card-header">
-                    <text class="card-title">截图预览</text>
-                    <text class="card-time">刚刚</text>
+                    <text class="card-title">{{ previewText }}</text>
+                    <text class="card-time">{{ justNowText }}</text>
                 </view>
                 <view class="card-content">
                     <image :src="'file://' + screenshotPath" mode="widthFix" class="preview-image" @click="openPreview" />
@@ -34,18 +34,25 @@
         <!-- Bottom Action -->
         <view class="action-bar">
             <button class="btn btn-primary" hover-class="btn-hover" @click="captureScreenshot">
-                立即截图
+                {{ captureText }}
             </button>
         </view>
     </view>
 </template>
 
 <script setup lang="uts">
-    import { ref } from 'vue';
+    import { ref, computed } from 'vue';
     import { captureScreen, CaptureScreenResult, CaptureScreenFail } from '@/uni_modules/android-PixedCopy';
     import { previewImage } from '@/uni_modules/image-preview';
+    import { t } from '@/locale/i18n.uts';
 
     let screenshotPath = ref<string>('');
+
+    const saveLocationText = computed(() : string => t('screenshot.saveLocation'))
+    const placeholderText = computed(() : string => t('screenshot.placeholder'))
+    const previewText = computed(() : string => t('screenshot.preview'))
+    const justNowText = computed(() : string => t('common.justNow'))
+    const captureText = computed(() : string => t('screenshot.capture'))
 
     function captureScreenshot() {
         captureScreen({
@@ -53,14 +60,14 @@
                 console.log('截图成功:', res.filePath);
                 screenshotPath.value = res.filePath;
                 uni.showToast({
-                    title: '截图成功',
+                    title: t('screenshot.success'),
                     icon: 'success'
                 });
             },
             fail: (err: CaptureScreenFail) => {
                 console.log('截图失败:', err.errMsg);
                 uni.showToast({
-                    title: '截图失败: ' + err.errMsg,
+                    title: t('screenshot.failed') + ': ' + err.errMsg,
                     icon: 'error'
                 });
             }
