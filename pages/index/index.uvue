@@ -32,15 +32,6 @@
         </view>
         <view class="card-arrow"></view>
       </view>
-
-      <view class="menu-card" @click="goToSettings" hover-class="menu-card-hover">
-        <view class="card-icon icon-settings"></view>
-        <view class="card-content">
-          <text class="card-title">{{ settings }}</text>
-          <text class="card-desc">{{ settingsDesc }}</text>
-        </view>
-        <view class="card-arrow"></view>
-      </view>
     </view>
   </view>
 </template>
@@ -57,8 +48,6 @@
   const screenshotDesc = computed(() : string => t('index.screenshotDesc'))
   const qrcode = computed(() : string => t('index.qrcode'))
   const qrcodeDesc = computed(() : string => t('index.qrcodeDesc'))
-  const settings = computed(() : string => t('index.settings'))
-  const settingsDesc = computed(() : string => t('index.settingsDesc'))
 
   function goToMemory() {
     uni.navigateTo({
@@ -75,12 +64,6 @@
   function goToQRCode() {
     uni.navigateTo({
       url: '/pages/qrcode/qrcode'
-    });
-  }
-
-  function goToSettings() {
-    uni.switchTab({
-      url: '/pages/settings/settings'
     });
   }
 </script>
