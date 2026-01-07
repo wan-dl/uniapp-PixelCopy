@@ -37,6 +37,22 @@
 			}
 		}
 	],
+	"tabBar": {
+		"color": "#64748b",
+		"selectedColor": "#6366f1",
+		"borderStyle": "white",
+		"backgroundColor": "#ffffff",
+		"list": [
+			{
+				"pagePath": "pages/index/index",
+				"text": "首页"
+			},
+			{
+				"pagePath": "pages/settings/settings",
+				"text": "设置"
+			}
+		]
+	},
 	"globalStyle": {
 		"navigationBarTextStyle": "black",
 		"navigationBarTitleText": "uni-app x",
