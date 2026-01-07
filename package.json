@@ -25,7 +25,24 @@
     "test:app-android": "uni-test app-android",
     "test:app-ios": "uni-test app-ios",
     "test:app-harmony": "uni-test app-harmony",
-    "test:mp-weixin": "uni-test mp-weixin"
+    "test:mp-weixin": "uni-test mp-weixin",
+    "hbuilderx": "hbuilderx",
+    "dev:web": "uni-launch web",
+    "dev:app-android": "uni-launch app-android",
+    "dev:app-ios": "uni-launch app-ios",
+    "dev:app-harmony": "uni-launch app-harmony",
+    "dev:mp-weixin": "uni-launch mp-weixin",
+    "dev:mp-alipay": "uni-launch mp-alipay",
+    "dev:mp-baidu": "uni-launch mp-baidu",
+    "dev:mp-xhs": "uni-launch mp-xhs",
+    "dev:mp-toutiao": "uni-launch mp-toutiao",
+    "dev:mp-qq": "uni-launch mp-qq",
+    "dev:mp-360": "uni-launch mp-360",
+    "dev:mp-kuaishou": "uni-launch mp-kuaishou",
+    "dev:mp-lark": "uni-launch mp-lark",
+    "dev:mp-jd": "uni-launch mp-jd",
+    "dev:quickapp-huawei": "uni-launch quickapp-webview-huawei",
+    "dev:quickapp-union": "uni-launch quickapp-webview-union"
   },
   "repository": {
     "type": "git",
@@ -39,6 +56,6 @@
   },
   "homepage": "https://github.com/dcloud-wandl/uni-PixelCopy#readme",
   "dependencies": {
-    "@dcloudio/hbuilderx-cli": "^1.1.2"
+    "@dcloudio/hbuilderx-cli": "^1.2.0"
   }
 }
