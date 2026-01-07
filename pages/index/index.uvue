@@ -71,7 +71,7 @@
 <style>
   .page-container {
     flex: 1;
-    background-color: #ffffff;
+    background-color: #F8F8F8;
     padding: 24px;
   }
 
