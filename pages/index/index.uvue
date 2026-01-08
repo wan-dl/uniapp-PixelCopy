@@ -7,7 +7,9 @@
 
     <view class="menu-list">
       <view class="menu-card" @click="goToMemory" hover-class="menu-card-hover">
-        <view class="card-icon icon-memory"></view>
+        <view class="card-icon icon-memory">
+          <text class="icon-text">📊</text>
+        </view>
         <view class="card-content">
           <text class="card-title">{{ memoryMonitor }}</text>
           <text class="card-desc">{{ memoryDesc }}</text>
@@ -16,7 +18,9 @@
       </view>
 
       <view class="menu-card" @click="goToScreenshot" hover-class="menu-card-hover">
-        <view class="card-icon icon-screenshot"></view>
+        <view class="card-icon icon-screenshot">
+          <text class="icon-text">📷</text>
+        </view>
         <view class="card-content">
           <text class="card-title">{{ screenshot }}</text>
           <text class="card-desc">{{ screenshotDesc }}</text>
@@ -25,7 +29,9 @@
       </view>
 
       <view class="menu-card" @click="goToQRCode" hover-class="menu-card-hover">
-        <view class="card-icon icon-qrcode"></view>
+        <view class="card-icon icon-qrcode">
+          <text class="icon-text">📱</text>
+        </view>
         <view class="card-content">
           <text class="card-title">{{ qrcode }}</text>
           <text class="card-desc">{{ qrcodeDesc }}</text>
@@ -118,7 +124,13 @@
     height: 48px;
     border-radius: 12px;
     margin-right: 16px;
-    /* Placeholder colors for icons */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .icon-text {
+    font-size: 24px;
   }
 
   .icon-memory {
