@@ -60,7 +60,9 @@ export function fetchMemoryData() {
 
     // Add to history
     if (!isNaN(pssNum)) {
-        globalHistoryData.value.push(pssNum);
+        const newHistory = [...globalHistoryData.value];
+        newHistory.push(pssNum);
+        globalHistoryData.value = newHistory;
     }
 
     uni.setStorageSync('memory_cache_data', newData);
