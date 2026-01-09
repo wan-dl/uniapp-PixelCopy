@@ -31,6 +31,13 @@
 			}
 		},
 		{
+			"path": "pages/game/game",
+			"style": {
+				"navigationBarTitleText": "像素躲避",
+				"navigationStyle": "custom"
+			}
+		},
+		{
 			"path": "pages/settings/settings",
 			"style": {
 				"navigationBarTitleText": "设置"

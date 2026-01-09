@@ -38,6 +38,17 @@
         </view>
         <view class="card-arrow"></view>
       </view>
+
+      <view class="menu-card" @click="goToGame" hover-class="menu-card-hover">
+        <view class="card-icon icon-game">
+          <text class="icon-text">🎮</text>
+        </view>
+        <view class="card-content">
+          <text class="card-title">{{ game }}</text>
+          <text class="card-desc">{{ gameDesc }}</text>
+        </view>
+        <view class="card-arrow"></view>
+      </view>
     </view>
   </view>
 </template>
@@ -54,6 +65,8 @@
   const screenshotDesc = computed(() : string => t('index.screenshotDesc'))
   const qrcode = computed(() : string => t('index.qrcode'))
   const qrcodeDesc = computed(() : string => t('index.qrcodeDesc'))
+  const game = computed(() : string => t('index.game'))
+  const gameDesc = computed(() : string => t('index.gameDesc'))
 
   function goToMemory() {
     uni.navigateTo({
@@ -70,6 +83,12 @@
   function goToQRCode() {
     uni.navigateTo({
       url: '/pages/qrcode/qrcode'
+    });
+  }
+
+  function goToGame() {
+    uni.navigateTo({
+      url: '/pages/game/game'
     });
   }
 </script>
@@ -149,6 +168,12 @@
     background-color: #d1fae5; /* Emerald 100 */
     border-width: 1px;
     border-color: #a7f3d0;
+  }
+
+  .icon-game {
+    background-color: #fce7f3; /* Pink 100 */
+    border-width: 1px;
+    border-color: #fbcfe8;
   }
 
   .icon-settings {

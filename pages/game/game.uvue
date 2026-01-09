@@ -1,0 +1,360 @@
+<template>
+  <view class="game-container">
+    <!-- Header / Score Board -->
+    <view class="score-board">
+      <text class="score-text">{{ scoreText }}: {{ score }}</text>
+      <text class="highscore-text">{{ highScoreText }}: {{ highScore }}</text>
+    </view>
+
+    <!-- Game Area -->
+    <view class="game-area" id="gameArea" @touchmove="handleTouchMove" @touchstart="handleTouchStart">
+      
+      <!-- Player -->
+      <view class="player" :style="{ left: playerX + 'px', bottom: '20px' }"></view>
+
+      <!-- Enemies -->
+      <view 
+        v-for="enemy in enemies" 
+        :key="enemy.id" 
+        class="enemy" 
+        :style="{ left: enemy.x + 'px', top: enemy.y + 'px', backgroundColor: enemy.color }">
+      </view>
+
+      <!-- Game Over Overlay -->
+      <view v-if="gameOver" class="game-over-modal">
+        <text class="game-over-title">{{ gameOverText }}</text>
+        <text class="final-score">{{ scoreText }}: {{ score }}</text>
+        <view class="restart-btn" @click="startGame">
+          <text class="btn-text">{{ restartText }}</text>
+        </view>
+      </view>
+
+      <!-- Start Overlay -->
+      <view v-if="!isPlaying && !gameOver" class="start-modal">
+        <text class="game-title">{{ gameTitle }}</text>
+        <view class="start-btn" @click="startGame">
+           <text class="btn-text">{{ startText }}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+</template>
+
+<script setup lang="uts">
+  import { ref, reactive, computed, onMounted, onUnmounted } from 'vue'
+  import { t } from '@/locale/i18n.uts'
+
+  // Types
+  type Enemy = {
+    id: number
+    x: number
+    y: number
+    speed: number
+    color: string
+    width: number
+    height: number
+  }
+
+  // Constants
+  const PLAYER_SIZE = 50
+  const PLAYER_Y_OFFSET = 20 // Bottom offset
+  const SPAWN_RATE_INITIAL = 1000 // ms
+  const COLORS = ['#ef4444', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6']
+
+  // State
+  const score = ref(0)
+  const highScore = ref(0)
+  const isPlaying = ref(false)
+  const gameOver = ref(false)
+  const playerX = ref(0)
+  const enemies = ref<Enemy[]>([])
+  
+  // Game Loop
+  let gameLoopId : number = -1
+  let spawnLoopId : number = -1
+  let screenWidth = 0
+  let screenHeight = 0
+  let gameAreaHeight = 0
+
+  // Computed Strings
+  const gameTitle = computed(() : string => t('game.title'))
+  const scoreText = computed(() : string => t('game.score'))
+  const highScoreText = computed(() : string => t('game.highScore'))
+  const gameOverText = computed(() : string => t('game.gameOver'))
+  const startText = computed(() : string => t('game.start'))
+  const restartText = computed(() : string => t('game.restart'))
+
+  // Methods
+  function stopGame() {
+    isPlaying.value = false
+    clearInterval(gameLoopId)
+    clearInterval(spawnLoopId)
+  }
+
+  function endGame() {
+    stopGame()
+    gameOver.value = true
+    if (score.value > highScore.value) {
+      highScore.value = score.value
+      uni.setStorageSync('game_high_score', highScore.value)
+    }
+  }
+
+  function spawnEnemy() {
+    const id = Date.now()
+    const size = 40 + Math.random() * 20 // Random size 40-60
+    const x = Math.random() * (screenWidth - size)
+    const colorIndex = Math.floor(Math.random() * COLORS.length)
+    const color = COLORS[colorIndex]
+    
+    const enemy = {
+      id: id,
+      x: x,
+      y: -60, // Start above screen
+      speed: 3 + Math.random() * 2 + (score.value * 0.1), // Speed increases with score
+      color: color,
+      width: size,
+      height: size
+    } as Enemy
+    
+    enemies.value.push(enemy)
+  }
+
+  function updateGame() {
+    const currentEnemies = enemies.value
+    const survivingEnemies : Enemy[] = []
+    
+    // Player Hitbox
+    const pX = playerX.value
+    const pY = gameAreaHeight - PLAYER_SIZE - PLAYER_Y_OFFSET
+    const pW = PLAYER_SIZE
+    const pH = PLAYER_SIZE
+    
+    for (let i = 0; i < currentEnemies.length; i++) {
+      const e = currentEnemies[i]
+      e.y += e.speed
+      
+      // Check Collision
+      // Simple AABB collision
+      if (
+        pX < e.x + e.width &&
+        pX + pW > e.x &&
+        pY < e.y + e.height &&
+        pY + pH > e.y
+      ) {
+        endGame()
+        return
+      }
+      
+      // Remove if off screen
+      if (e.y > gameAreaHeight) {
+        score.value += 1
+      } else {
+        survivingEnemies.push(e)
+      }
+    }
+    
+    enemies.value = survivingEnemies
+  }
+
+  function movePlayer(touchX: number) {
+    let newX = touchX - (PLAYER_SIZE / 2)
+    
+    // Boundaries
+    if (newX < 0) newX = 0
+    if (newX > screenWidth - PLAYER_SIZE) newX = screenWidth - PLAYER_SIZE
+    
+    playerX.value = newX
+  }
+
+  function startGame() {
+    isPlaying.value = true
+    gameOver.value = false
+    score.value = 0
+    enemies.value = []
+    
+    // Center player
+    playerX.value = (screenWidth - PLAYER_SIZE) / 2
+    
+    // Start loops
+    spawnLoopId = setInterval(() => {
+      spawnEnemy()
+    }, SPAWN_RATE_INITIAL)
+
+    gameLoopId = setInterval(() => {
+      updateGame()
+    }, 16) // ~60fps
+  }
+
+  function handleTouchStart(e: TouchEvent) {
+      if (!isPlaying.value) return
+      movePlayer(e.touches[0].clientX)
+  }
+
+  function handleTouchMove(e: TouchEvent) {
+      if (!isPlaying.value) return
+      movePlayer(e.touches[0].clientX)
+  }
+
+  // Lifecycle
+  onMounted(() => {
+    const sysInfo = uni.getSystemInfoSync()
+    screenWidth = sysInfo.windowWidth
+    screenHeight = sysInfo.windowHeight
+    // Approximate game area height (screen minus header)
+    gameAreaHeight = screenHeight - 100 
+    
+    // Center player initially
+    playerX.value = (screenWidth - PLAYER_SIZE) / 2
+    
+    // Load high score
+    const savedScore = uni.getStorageSync('game_high_score')
+    if (savedScore != null) {
+      // Safe casting/conversion
+      let val = 0
+      if (typeof savedScore == 'number') {
+        val = savedScore as number
+      } else {
+        val = parseInt(savedScore.toString())
+      }
+      
+      if (!Number.isNaN(val)) {
+        highScore.value = val
+      }
+    }
+  })
+
+  onUnmounted(() => {
+    stopGame()
+  })
+
+</script>
+
+<style>
+  .game-container {
+    flex: 1;
+    background-color: #1e293b;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .score-board {
+    height: 80px;
+    padding-top: 40px; /* Status bar area */
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    padding-left: 20px;
+    padding-right: 20px;
+    align-items: center;
+    background-color: #0f172a;
+    z-index: 10;
+  }
+
+  .score-text {
+    color: #ffffff;
+    font-size: 18px;
+    font-weight: bold;
+  }
+
+  .highscore-text {
+    color: #94a3b8;
+    font-size: 14px;
+  }
+
+  .game-area {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .player {
+    position: absolute;
+    width: 50px;
+    height: 50px;
+    background-color: #6366f1; /* Indigo */
+    border-radius: 8px;
+    border-width: 2px;
+    border-color: #ffffff;
+  }
+
+  .enemy {
+    position: absolute;
+    border-radius: 4px;
+  }
+
+  .game-over-modal {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.8);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+  }
+
+  .start-modal {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.6);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+  }
+
+  .game-title {
+    font-size: 40px;
+    font-weight: 700;
+    color: #ffffff;
+    margin-bottom: 40px;
+    text-align: center;
+  }
+
+  .game-over-title {
+    font-size: 32px;
+    color: #ef4444;
+    font-weight: bold;
+    margin-bottom: 20px;
+  }
+
+  .final-score {
+    font-size: 24px;
+    color: #ffffff;
+    margin-bottom: 40px;
+  }
+
+  .start-btn {
+    background-color: #10b981;
+    border-radius: 50px;
+    width: 200px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .restart-btn {
+    background-color: #6366f1;
+    border-radius: 50px;
+    width: 200px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .btn-text {
+    color: #ffffff;
+    font-size: 18px;
+    font-weight: bold;
+  }
+</style>

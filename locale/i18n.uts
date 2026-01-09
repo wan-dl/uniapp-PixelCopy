@@ -7,7 +7,7 @@ export const currentLocale = ref<string>('zh-CN')
 const zhCN : UTSJSONObject = {
 	// 通用
 	'app.title': 'PixelCopy',
-	'app.subtitle': '开发者工具箱',
+	'app.subtitle': '工具箱',
 	'common.cancel': '取消',
 	'common.confirm': '确定',
 	'common.copy': '复制',
@@ -23,6 +23,8 @@ const zhCN : UTSJSONObject = {
 	'index.screenshotDesc': '原生 PixelCopy 截图与保存',
 	'index.qrcode': '二维码扫描',
 	'index.qrcodeDesc': 'MLKit 相机扫码与识别',
+	'index.game': '像素躲避',
+	'index.gameDesc': '简单的反应力挑战游戏',
 	'index.settings': '设置',
 	'index.settingsDesc': '语言切换与应用设置',
 
@@ -81,6 +83,14 @@ const zhCN : UTSJSONObject = {
 	'settings.about': '关于',
 	'settings.version': '版本',
 
+	// 游戏页面
+	'game.title': '像素躲避',
+	'game.score': '得分',
+	'game.gameOver': '游戏结束',
+	'game.start': '开始游戏',
+	'game.restart': '重新开始',
+	'game.highScore': '最高分',
+
 	// App.uvue
 	'app.exitConfirm': '再按一次退出应用'
 }
@@ -105,6 +115,8 @@ const enUS : UTSJSONObject = {
 	'index.screenshotDesc': 'Native PixelCopy capture & save',
 	'index.qrcode': 'QR Code Scanner',
 	'index.qrcodeDesc': 'MLKit camera scanning & recognition',
+	'index.game': 'Pixel Dodger',
+	'index.gameDesc': 'Simple reflex challenge game',
 	'index.settings': 'Settings',
 	'index.settingsDesc': 'Language switch & app settings',
 
@@ -162,6 +174,14 @@ const enUS : UTSJSONObject = {
 	'settings.english': 'English',
 	'settings.about': 'About',
 	'settings.version': 'Version',
+
+	// 游戏页面
+	'game.title': 'Pixel Dodger',
+	'game.score': 'Score',
+	'game.gameOver': 'Game Over',
+	'game.start': 'Start Game',
+	'game.restart': 'Restart',
+	'game.highScore': 'High Score',
 
 	// App.uvue
 	'app.exitConfirm': 'Press again to exit'
